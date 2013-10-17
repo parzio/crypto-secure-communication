@@ -1,7 +1,7 @@
 #include "mylib.h"
 
 
-inline u_int8_t BIT(u_int8_t shift){
+inline u_int16_t BIT(u_int8_t shift){
 	return 1 << shift;
 }
 
@@ -19,18 +19,27 @@ inline u_int8_t toField(u_int8_t pA ,u_int8_t degree){ // make the bit out of th
 
 u_int8_t product(u_int16_t field, u_int8_t pA, u_int8_t pB, u_int8_t degree){
 	
-	pB = toField(pB , degree);	
+	u_int16_t tempB = toField(pB , degree);	
+	pA = toField(pA , degree);
+
 	u_int16_t result = 0;	
 	int i=0;
 	for(i=0; i < degree; i++) 
 	{
 		if(pA & BIT(i)) 	//check if bit i of pA is 1
-			result ^= pB; 	//sum in field 2 is XOR so x^2 + x^2 = 0 (I think). 
-		pB <<=1;
+			result ^= tempB; 	//sum in field 2 is XOR so x^2 + x^2 = 0 (I think). 
+		tempB <<=1;
 	}
-	
-	//TODO remainder
-	
+
+	if(result < BIT(degree))
+		return (u_int8_t) result;
+
+	for(i=15; i >= degree; i--)
+	{
+		if(BIT(i) & result)
+			result ^= (field << (i - degree)) ;			
+	}
+
 	return (u_int8_t) result;
 	
 }
@@ -63,7 +72,7 @@ u_int8_t rotate (u_int8_t pA , int shift , u_int8_t degree){
 	return pA;
 }
 
-void print(u_int8_t a){
+void print(u_int16_t a){
 	
 	int l = sizeof(a) * 8;	
 	unsigned char bits[l];
