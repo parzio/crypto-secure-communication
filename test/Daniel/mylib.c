@@ -1,92 +1,133 @@
 #include "mylib.h"
 
-
-inline u_int16_t BIT(u_int8_t shift){
-	return 1 << shift;
-}
-
-inline u_int8_t sum(u_int8_t pA, u_int8_t pB){
-	return (pA ^ pB);		
-}
-
-inline u_int8_t toField(u_int8_t pA ,u_int8_t degree){ // make the bit out of the field 0	
+void LFSR_init(LFSR *lfsr , bit reg[], bit poly[], unsigned int degree){
+	
+	lfsr->reg  = malloc(degree * sizeof(bit));	//register
+	lfsr->poly = malloc((degree + 1) * sizeof(bit));	//polynomial
+	lfsr->degree = degree;	//degree of the polynomial
+	
 	int i;
-	for(i = 7 ; i >= degree ; i--) 
-		if(pA & BIT(i))
-			pA ^= BIT(i);
-	return pA;
+	
+	for(i=0 ; i < degree; i++){
+		lfsr->reg[i]  = reg[i];	
+		lfsr->poly[i] = poly[i];
+	}
+	
+	lfsr->poly[degree] = poly[degree];
+		
 }
 
-u_int8_t product(u_int16_t field, u_int8_t pA, u_int8_t pB, u_int8_t degree){
+void LFSR_delete(LFSR *lfsr){	
 	
-	u_int16_t tempB = toField(pB , degree);	
-	pA = toField(pA , degree);
-
-	u_int16_t result = 0;	
-	int i=0;
-	for(i=0; i < degree; i++) 
-	{
-		if(pA & BIT(i)) 	//check if bit i of pA is 1
-			result ^= tempB; 	//sum in field 2 is XOR so x^2 + x^2 = 0 (I think). 
-		tempB <<=1;
-	}
-
-	if(result < BIT(degree))
-		return (u_int8_t) result;
-
-	for(i=15; i >= degree; i--)
-	{
-		if(BIT(i) & result)
-			result ^= (field << (i - degree)) ;			
-	}
-
-	return (u_int8_t) result;
+	if(lfsr->reg != NULL)
+		free(lfsr->reg);
 	
+	if(lfsr->poly != NULL)
+		free(lfsr->poly);
 }
 
-u_int8_t rotate (u_int8_t pA , int shift , u_int8_t degree){
+void LFSR_print(LFSR *lfsr){	
+	
+	if(lfsr->reg == NULL || lfsr->poly == NULL || lfsr->degree == 0)
+	{
+		printf("reg empty!!!");
+		return;		
+	}
 
-	degree --;
 	int i = 0;
-	u_int8_t mask = 0;
-	if(shift <= 0)	//left rotation
-	{
-		for(i = 0; i < abs(shift); i++)
-		{
-			mask = (pA & BIT(degree)) ? 1 : 0; //check the first bit 
-			pA <<= 1;	//left shift
-			pA |= mask;	//add the removed bit
-		}
-	}
-	else
-	{
-		for(i = 0; i < (unsigned) shift; i++)
-		{
-			mask = (pA & BIT(0)) ? 1 : 0;	//check the first bit
-			pA >>= 1;	//right shift
-			if(mask == 1)
-				pA |= BIT(degree); //add the removed bit 
-		}
-	}
+	
+	printf("LFSR reg : ");
+	
+	for(i = lfsr->degree-1 ; i >= 0; i--)
+		printf("%d " , lfsr->reg[i]);
 
-	return pA;
+	printf("\tpoly : ");
+	
+	for(i = lfsr->degree ; i >= 0; i--)
+		printf("%d " , lfsr->poly[i]);
+	
+	printf("\n");
+	
 }
 
-void print(u_int16_t a){
+bit LFSR_update(LFSR *lfsr){
 	
-	int l = sizeof(a) * 8;	
-	unsigned char bits[l];
-	printf("num : %d -> \t", a);
+	unsigned int i;
+
+	bit xored = 0;
+	
+	for(i = 1; i < (lfsr->degree + 1); i++)
+	{
+		if(lfsr->poly[i] == 1)
+			xored ^= lfsr->reg[i - 1]; //TODO not sure	
+	}
+	
+	rotate(lfsr->reg , 1 , lfsr->degree);
+	
+	lfsr->reg[lfsr->degree - 1] = xored;
+	
+	return xored; //output
+					
+}
+
+void LFSR_getStream(LFSR *lfsr , bit *result, unsigned int stream){
+
 	int i;
-	for ( i = 0; i < l; i++) {
-		bits[i] = a & 1;
-		a >>= 1;
-	}
-	for ( i = l-1; i >= 0; i--) {
-		printf("%d ",bits[i]);
-	}
+	for(i=0; i < stream; i++)
+		result[i] = LFSR_update(lfsr);
+		
+}
+
+void printArray(bit *array, unsigned int x){	
+	int i;
+	for(i=0; i < x; i++)
+		printf("%d " , array[i]);
 	printf("\n");
 }
+
+void rotate(bit * array, int shift , unsigned int degree){
+	
+	// negative shift means left shift , positive means right shift
+	
+	bit buffer[degree];
+	
+	int i;
+	
+	if(shift < 0) //left , (means right)
+	{
+		int j = 0;
+		for(i = (degree - abs(shift)) ; i < degree; i++) 
+		{
+			buffer[j] = array[i];
+			j++;
+		}
+		for(i = 0; i < (degree - abs(shift)) ; i++)
+		{
+			buffer[j] = array[i];
+			j++;	
+		}	
+	}
+	else	//right, (means left)
+	{
+		int j = 0;
+		for(i = shift ; i < degree ; i++)
+		{
+			buffer[j] = array[i];
+			j++;	
+		}		
+		for(i = 0 ; i < shift ; i++)
+		{
+			buffer[j] = array[i];
+			j++;	
+		}		
+	}
+	
+	for(i=0; i < degree; i++)
+		array[i] = buffer[i];	
+}
+
+
+
 
 
 
