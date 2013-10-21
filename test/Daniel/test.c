@@ -1,5 +1,6 @@
 
-#include "mylib.h"
+#include "streamChiper.h"
+#include "utility.h"
 
 
 int main(int argc, char ** argv){
@@ -29,7 +30,17 @@ int main(int argc, char ** argv){
 	
 	printArray(result , stream);	
 	
-	MAJ5_delete(&maj5);	
+	MAJ5_delete(&maj5);
+	
+	/*ALL5 all5;
+	
+	ALL5_init(&all5);
+	
+	ALL5_getStream(&all5, result , stream);
+	
+	printArray(result , stream);	
+	
+	ALL5_delete(&all5);*/
 
 	return 0;
 		

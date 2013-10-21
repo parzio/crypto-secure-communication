@@ -1,10 +1,11 @@
-MYLIB  	= mylib.o
-TESTER 	= test.o
-CC 	= gcc
-CFLAGS 	= -Wall
+STREAMCHIPER  	= streamChiper.o
+UTILITY		= utility.o
+TESTER 		= test.o
+CC 		= gcc
+CFLAGS 		= -Wall -w
 
-all: $(MYLIB) $(TESTER)
-	$(CC) $(CFLAGS) -o test $(MYLIB) $(TESTER)
+all: $(STREAMCHIPER) $(UTILITY) $(TESTER) 
+	$(CC) $(CFLAGS) -o test $(STREAMCHIPER) $(TESTER) $(UTILITY)
 
 clean:
 	rm -f *.o test

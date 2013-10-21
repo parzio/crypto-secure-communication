@@ -1,5 +1,5 @@
-#ifndef _MYLIB_H
-#define _MYLIB_H
+#ifndef _STREAMCHIPER_H
+#define _STREAMCHIPER_H
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -99,22 +99,5 @@ void ALL5_getStream(ALL5 *all5, bit *result, unsigned int stream);
 void ALL5_encrypt(ALL5 *all5, bit *plaintext, bit *cypertext, unsigned int length);
 void ALL5_decrypt(ALL5 *all5, bit *plaintext, bit *cypertext, unsigned int length);
 
-/** TODO notation
-
-we'll use array of u_int8_t (alias bit) as the base type (at least for now)
-
-now the order : 
-
-an array {1 , 1 , 0 , 0 , 0 , 1} means 2^0 + 2^1 + 2^5 , or x^0 + x^1 + x^5.
-
-so the order is natural (It's easier in this way (index , xor , bla bla) the only thing is that if we have
-to do a left rotation we have to move the bits to the right and viceversa).
- 
-
-*/
-
-void rotate(bit * array, int shift , unsigned int degree);
-void printArray(bit *array, unsigned int x);
-int arrayToByte(bit *bits, bit *bytes, int length);
 
 #endif
