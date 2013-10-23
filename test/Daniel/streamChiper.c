@@ -1,4 +1,4 @@
-#include "mylib.h"
+#include "streamChiper.h"
 
 /** LFSR */
 
@@ -55,8 +55,10 @@ void LFSR_print(LFSR *lfsr){
 bit  LFSR_getBit(LFSR *lfsr, unsigned int position){
 		
 		if(position < 0 || position >= lfsr->degree)
+		{
+			perror("index of out range");
 			return lfsr->reg[0];
-	
+		}
 		return lfsr->reg[position];
 }
 

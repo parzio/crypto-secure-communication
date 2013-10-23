@@ -18,15 +18,21 @@
 #define ServerOpenConnection 	"HI!"
 #define ClientOpenConnection 	"Hello!"
 
-#define ClinetCloseConnection "Bye"
+#define ClientCloseConnection "Bye"
 #define ServerCloseConnection "ByeClient!"
 
-#define Shutdown					"Goodbye"
+typedef u_int8_t byte;
 
-int 	readFromPipe(const int in , u_int8_t **msg);
-int 	writeInPipe(const int out, const u_int8_t **msg);
+enum chiperSuite { MAJ5 , ALL5 };
+
+int 	readFromPipe(const int in , byte *msg);
+int 	writeInPipe(const int out, const byte *msg, u_int16_t size);
+
+int 	readFromFile(FILE *file, char *string);
+
+void 	printMsg(char *string , u_int16_t size);
+
 int	openChannel(const char *path);
 void 	closeChannel(int channel);
-//void  printMsg(FILE *file, const u_int8_t **msg);
 
 #endif

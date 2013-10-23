@@ -32,6 +32,10 @@ int main(int argc, char ** argv){
 	
 	MAJ5_delete(&maj5);
 	
+	char c[5] = { 'c' , 'i' , 'a' , 'o' , '\0' };
+	
+	printf("ciao : %s \n %d \n" , c , sizeof(c));
+	
 	/*ALL5 all5;
 	
 	ALL5_init(&all5);

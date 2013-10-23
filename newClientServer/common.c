@@ -16,7 +16,7 @@ void closeChannel(int channel_fd){
 	close(channel_fd);
 }
 
-int readFromPipe(const int in , u_int8_t **msg){
+int readFromPipe(const int in , byte *msg){
 	
 	int read_len;
 	u_int16_t msg_size;
@@ -33,46 +33,61 @@ int readFromPipe(const int in , u_int8_t **msg){
 		return -1;
 	}
 
+	char buffer[2048];
+	
 	/* Read msg_size bytes from the channel */
-	read_len = read(in , (void *)msg , msg_size);
+	read_len = read(in , (void *)buffer , msg_size);
+	
+	memcpy(msg, buffer , read_len);
+	
 	if( read_len < 0 ) {
 		perror("readMsg()");
 		return -1;
 	}
-
+	
 	return read_len;
 		
 }
 
-int writeInPipe(const int out , const u_int8_t **msg){
-	
-	u_int16_t size = sizeof(msg);
-	
-	printf("size : %d \n" , size);
-	
+int writeInPipe(const int out , const byte *msg , u_int16_t size){
+
 	/* Send the size */
 	if(write(out , (const void *)&size , sizeof(size)) < 0 ) {
 		perror("writeSize()");
 		return -1;
 	}
 
+	u_int16_t written = write(out ,(const void *)msg, size);
+	
 	/* Send the message */
-	if( write(out ,(const void *)msg, size) < 0 ) {
+	if( written  < 0 ) {
 		perror("writeMsg()");
 		return -1;
 	}
-	return 1;
+	
+	return written;
 }
 
-int read_string(int channel_fd, const char * str){
-	/*int read_len;
-	u_int8_t * msg;
-
-  read_len = read_msg(channel_fd, &msg);
-	if(	(read_len != strlen(str) ) ||
-   		 memcmp(msg,str,strlen(str)) )
-		return (-1);*/
-
-	return (0);
+int readFromFile(FILE *file, char *string){
+	
+	while(fgets(string, MSG_MAX_SIZE , file) != NULL){
+		
+		if(!((string[0] == '/') && (string[1] == '/')))
+			return 1;
+	}
+	
+	return 0;
+	
 }
 
+
+void printMsg(char *string , u_int16_t size){
+	
+	char buffer[2049];
+	
+	memcpy(buffer, string , size);
+	
+	buffer[size] = '\0';
+	
+	fprintf(stderr , "message : %s \n" , string);	
+}
