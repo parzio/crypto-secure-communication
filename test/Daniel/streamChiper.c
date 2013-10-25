@@ -67,6 +67,7 @@ bit LFSR_update(LFSR *lfsr){
 	unsigned int i;
 
 	bit xored = 0;
+	bit output = lfsr->reg[lfsr->degree - 1];
 	
 	for(i = 1; i < (lfsr->degree + 1); i++)
 	{
@@ -78,7 +79,9 @@ bit LFSR_update(LFSR *lfsr){
 	
 	lfsr->reg[0] = xored;
 	
-	return xored; //output
+	//the output is the bit shiftet to the right
+	
+	return output; //output
 					
 }
 
@@ -113,6 +116,40 @@ void MAJ5_init(MAJ5 *maj5){
 	LFSR_init(&maj5->reg[4] , MAJ5_reg5 , MAJ5_poly5 , MAJ5_degree[4]);	
 }
 
+void MAJ5_keyLoading(MAJ5 *maj5, bit key[] , bit vector[]){
+	
+	int i;
+	
+	for(i = 0; i < MAJ5_keyDegree; i++)
+	{
+		int j;
+		for(j = 0; j < 5; j++)
+		{
+			LFSR_update(&maj5->reg[j]);
+			maj5->reg[j].reg[0] ^= key[i];		
+		}		
+	}
+	
+	for(i = 0; i < MAJ5_frameVectorDegree; i++)
+	{
+		int j;
+		for(j = 0; j < 5; j++)
+		{
+			LFSR_update(&maj5->reg[j]);
+			maj5->reg[j].reg[0] ^= vector[i];		
+		}		
+	}
+	
+}
+
+void MAJ5_warmUpStream(MAJ5 *maj5, unsigned int stream){
+
+	int i;
+	for(i = 0; i < stream; i++)
+		MAJ5_update(maj5);
+	
+}
+
 void MAJ5_delete(MAJ5 *maj5){	
 	int i;	
 	for(i = 0; i < 5; i++)
@@ -120,9 +157,7 @@ void MAJ5_delete(MAJ5 *maj5){
 }
 
 bit  MAJ5_update(MAJ5 *maj5){
-	
-	MAJ5_printStatus(maj5);
-	
+
 	int count_zero = 0;
 	int i;
 	bit output = 0;
@@ -131,7 +166,6 @@ bit  MAJ5_update(MAJ5 *maj5){
 	for(i = 0; i < 5; i++)
 	{
 		temp = LFSR_getBit(&maj5->reg[i] , MAJ5_clock[i]);
-		output ^= temp;
 		if(temp == 0)
 			count_zero ++;			
 	}
@@ -139,14 +173,22 @@ bit  MAJ5_update(MAJ5 *maj5){
 	if(count_zero >= 3) //update all the 0 registers
 	{
 		for(i = 0; i < 5; i++)
+		{
 			if(LFSR_getBit(&maj5->reg[i], MAJ5_clock[i]) == 0)
-				LFSR_update(&maj5->reg[i]);
+				output ^= LFSR_update(&maj5->reg[i]);
+			else
+				output ^= LFSR_getBit(&maj5->reg[i], (maj5->reg[i].degree-1));
+		}
 	}
 	else	//update all the 1 registers
 	{
 		for(i = 0; i < 5; i++)
+		{
 			if(LFSR_getBit(&maj5->reg[i], MAJ5_clock[i]) == 1)
-				LFSR_update(&maj5->reg[i]);		
+				output ^= LFSR_update(&maj5->reg[i]);
+			else
+				output ^= LFSR_getBit(&maj5->reg[i], (maj5->reg[i].degree-1));
+		}	
 	}
 
 	//TODO wrong output
@@ -196,6 +238,40 @@ void ALL5_init(ALL5 *all5){
 	LFSR_init(&all5->reg[4] , ALL5_reg5 , ALL5_poly5 , ALL5_degree[4]);	
 }
 
+void ALL5_keyLoading(ALL5 *all5, bit key[] , bit vector[]){
+	
+	int i;
+	
+	for(i = 0; i < ALL5_keyDegree; i++)
+	{
+		int j;
+		for(j = 0; j < 5; j++)
+		{
+			LFSR_update(&all5->reg[j]);
+			all5->reg[j].reg[0] ^= key[i];		
+		}		
+	}
+	
+	for(i = 0; i < ALL5_frameVectorDegree; i++)
+	{
+		int j;
+		for(j = 0; j < 5; j++)
+		{
+			LFSR_update(&all5->reg[j]);
+			all5->reg[j].reg[0] ^= vector[i];		
+		}		
+	}
+	
+}
+
+void ALL5_warmUpStream(ALL5 *all5, unsigned int stream){
+
+	int i;
+	for(i = 0; i < stream; i++)
+		ALL5_update(all5);
+	
+}
+
 void ALL5_delete(ALL5 *all5){	
 	int i;	
 	for(i = 0; i < 5; i++)
@@ -204,7 +280,7 @@ void ALL5_delete(ALL5 *all5){
 
 bit  ALL5_update(ALL5 *all5){
 	
-	ALL5_printStatus(all5);
+	//ALL5_printStatus(all5);
 	
 	int count_zero = 0;
 	int i;

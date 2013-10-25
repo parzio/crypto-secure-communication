@@ -30,19 +30,20 @@ void LFSR_getStream(LFSR *lfsr , bit *result, unsigned int stream);
 
 //TODO for the polynomial the order is 1 + x^0 bla bla, for the register the order doesn't matter
 
-static bit MAJ5_reg1[] =  {0 , 1 , 0 , 0 , 1 , 0 , 0 , 1 , 0 , 1 , 1 , 0 , 1 , 1 , 1 , 0 , 0 , 0 , 0};
+static bit MAJ5_reg1[] =  {0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0};
+static bit MAJ5_reg2[] =  {0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0};
+static bit MAJ5_reg3[] =  {0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0};
+static bit MAJ5_reg4[] =  {0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0};
+static bit MAJ5_reg5[] =  {0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0};
+
 static bit MAJ5_poly1[] = {1 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 1 , 0 , 0 , 1 , 1 , 1};
-static bit MAJ5_reg2[] =  {1 , 0 , 1 , 0 , 0 , 1 , 1 , 0 , 1 , 0 , 0 , 1 , 1 , 0 , 1 , 0 , 0 , 0 , 1 , 0 , 1 , 0};
 static bit MAJ5_poly2[] = {1 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 1 , 1};
-static bit MAJ5_reg3[] =  {1 , 1 , 1 , 0 , 1 , 0 , 0 , 1 , 1 , 1 , 1 , 1 , 0 , 1 , 0 , 0 , 0 , 1 , 0 , 0 , 0 , 1 , 1};
 static bit MAJ5_poly3[] = {1 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 1 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 1 , 1 , 1};
-static bit MAJ5_reg4[] =  {1 , 0 , 0 , 0 , 1 , 1 , 0 , 1 , 1 , 1 , 0};
 static bit MAJ5_poly4[] = {1 , 0 , 1 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 1};
-static bit MAJ5_reg5[] =  {1 , 1 , 1 , 1 , 0 , 1 , 0 , 0 , 1 , 1 , 1 , 1 , 1};
 static bit MAJ5_poly5[] = {1 , 1 , 0 , 1 , 1 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 1};
 
-static bit MAJ5_frameVector[] = {0,0,1,0,1,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0};
 static unsigned int MAJ5_frameVectorDegree = 22;
+static unsigned int MAJ5_keyDegree = 64;
 
 /** MAJ5 update variables */
 
@@ -56,7 +57,7 @@ typedef struct {
 
 void MAJ5_init(MAJ5 *maj5);
 void MAJ5_delete(MAJ5 *maj5);
-void MAJ5_keyLoading(MAJ5 *maj5, bit key[] , unsigned int keyLength);
+void MAJ5_keyLoading(MAJ5 *maj5, bit key[] , bit vector[]);
 void MAJ5_warmUpStream(MAJ5 *maj5, unsigned int stream);
 bit  MAJ5_update(MAJ5 *maj5);
 void MAJ5_printStatus(MAJ5 *maj5);
@@ -67,19 +68,20 @@ void MAJ5_decrypt(MAJ5 *maj5, bit *plaintext, bit *cypertext, unsigned int lengt
 
 /** ALL5 init variables , same as MAJ5 */
 
-static bit ALL5_reg1[] =  {0 , 1 , 0 , 0 , 1 , 0 , 0 , 1 , 0 , 1 , 1 , 0 , 1 , 1 , 1 , 0 , 0 , 0 , 0};
+static bit ALL5_reg1[] =  {0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0};
+static bit ALL5_reg2[] =  {0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0};
+static bit ALL5_reg3[] =  {0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0};
+static bit ALL5_reg4[] =  {0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0};
+static bit ALL5_reg5[] =  {0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0};
+
 static bit ALL5_poly1[] = {1 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 1 , 0 , 0 , 1 , 1 , 1};
-static bit ALL5_reg2[] =  {1 , 0 , 1 , 0 , 0 , 1 , 1 , 0 , 1 , 0 , 0 , 1 , 1 , 0 , 1 , 0 , 0 , 0 , 1 , 0 , 1 , 0};
 static bit ALL5_poly2[] = {1 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 1 , 1};
-static bit ALL5_reg3[] =  {1 , 1 , 1 , 0 , 1 , 0 , 0 , 1 , 1 , 1 , 1 , 1 , 0 , 1 , 0 , 0 , 0 , 1 , 0 , 0 , 0 , 1 , 1};
 static bit ALL5_poly3[] = {1 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 1 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 1 , 1 , 1};
-static bit ALL5_reg4[] =  {1 , 0 , 0 , 0 , 1 , 1 , 0 , 1 , 1 , 1 , 0};
 static bit ALL5_poly4[] = {1 , 0 , 1 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 1};
-static bit ALL5_reg5[] =  {0 , 1 , 1 , 1 , 1 , 0 , 1 , 0 , 0 , 1 , 1 , 1 , 1};
 static bit ALL5_poly5[] = {1 , 1 , 0 , 1 , 1 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 1};
 
-static bit ALL5_frameVector[] = {0,0,1,0,1,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0};
 static unsigned int ALL5_frameVectorDegree = 22;
+static unsigned int ALL5_keyDegree = 64;
 
 /** ALL5 update variables */
 
@@ -91,7 +93,7 @@ typedef struct {
 
 void ALL5_init(ALL5 *all5);
 void ALL5_delete(ALL5 *all5);
-void ALL5_keyLoading(ALL5 *all5, bit key[] , unsigned int keyLength);
+void ALL5_keyLoading(ALL5 *all5, bit key[] , bit vector[]);
 void ALL5_warmUpStream(ALL5 *all5, unsigned int stream);
 bit  ALL5_update(ALL5 *all5);
 void ALL5_printStatus(ALL5 *all5);
