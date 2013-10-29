@@ -1,0 +1,14 @@
+TESTER 		= test.o
+CC 		= gcc
+CFLAGS 		= -Wall -w
+STREAMCHIPER	= $(patsubst %.c, %.o, $(wildcard StreamChiper/*.c))
+UTILITY		= $(patsubst %.c, %.o, $(wildcard Utility/*.c))
+BLOCKCHIPER	= $(patsubst %.c, %.o, $(wildcard BlockChiper/*.c))
+HASHFUCNTION	= $(patsubst %.c, %.o, $(wildcard HashFunction/*.c))
+
+all: $(STREAMCHIPER) $(UTILITY) $(HASHFUCNTION) $(BLOCKCHIPER) $(TESTER) 
+	$(CC) $(CFLAGS) -o test $(STREAMCHIPER) $(UTILITY) $(HASHFUCNTION) $(BLOCKCHIPER) $(TESTER)
+
+clean:
+	rm -f *.o test $(STREAMCHIPER) $(UTILITY) $(BLOCKCHIPER) $(HASHFUCNTION)
+	
