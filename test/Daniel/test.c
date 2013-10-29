@@ -11,30 +11,13 @@ int main(int argc, char ** argv){
 		1, 0, 1, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 1, 0, 
 		0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1};
 
-	//char * hex_key = "551458";
-	//char * hex_key = "100000";
-	
 	bit key[24];
 	bit vector[24];
-	
-	//char * hex_meg = "952795";
-	/*char * hex_meg = "000000";*/
-	
-	//printHex(plain , 24);
-	/*printHex(key , 24);*/
-
-/*	bunny24_encrypt(plain , key);
-
-	printHex(plain , 24);
-
-	bunny24_decrypt(plain , key);
-	
-	printHex(plain , 24);*/
 
 	char * initvector = "952795";
 	char * hex_key = "551458";
 	
-	hexToBinary(vector , initvector);	
+	/*hexToBinary(vector , initvector);	
 	hexToBinary(key , hex_key);
 	
 	bit ciphertext[getCipherLength(64)];
@@ -49,13 +32,17 @@ int main(int argc, char ** argv){
 	
 	printHex(msg , 64);
 	
-	/*
-	bit testplain[24] = {0 ,1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0};
+	*/
+	bit g[1000000];
 	
-	arraySum(testplain , initvector , testplain , 24);
+	FPRNG(g , 1000000);
 	
-	bunny24_encrypt(testplain , key);
+	//SPRNG(g , 100000);
 	
-	printHex(testplain , 24);
-*/
+	//printArray(g , 10000);
+	
+	
+	
+	
+
 }
