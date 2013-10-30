@@ -35,7 +35,7 @@ void ALL5_warmUpStream(ALL5 *all5, unsigned int stream);
 bit  ALL5_update(ALL5 *all5);
 void ALL5_printStatus(ALL5 *all5);
 void ALL5_getStream(ALL5 *all5, bit *result, unsigned int stream);
-void ALL5_encrypt(ALL5 *all5, bit *plaintext, bit *cypertext, unsigned int length);
-void ALL5_decrypt(ALL5 *all5, bit *plaintext, bit *cypertext, unsigned int length);
+void ALL5_encrypt(ALL5 *all5, bit *plaintext, bit *chipertext, unsigned int length);
+void ALL5_decrypt(ALL5 *all5, bit *plaintext, bit *chipertext, unsigned int length);
 
 #endif

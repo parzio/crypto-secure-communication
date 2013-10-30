@@ -118,3 +118,50 @@ void MAJ5_printStatus(MAJ5 *maj5){
 	}
 	printf("\n");	
 }
+
+void MAJ5_encrypt(MAJ5 *maj5, byte *plaintext, byte *chipertext, unsigned int length){
+		
+	int i , j;
+	
+	for(i = 0; i < length; i++) // for each byte
+	{
+		bit temp[8];
+		MAJ5_getStream(maj5 , temp , 8);
+		
+		byte currentByte = plaintext[i];
+		
+		for(j = 0; j < 8; j++)
+		{
+		bit x = temp[j] << j;	
+		currentByte ^= x;			
+		}
+		
+		chipertext[i] = currentByte;
+		
+	}
+		
+}
+
+
+void MAJ5_decrypt(MAJ5 *maj5, byte *plaintext, byte *chipertext, unsigned int length){
+		
+	int i , j;
+	
+	for(i = 0; i < length; i++) // for each byte
+	{
+		bit temp[8];
+		MAJ5_getStream(maj5 , temp , 8);
+		
+		byte currentByte = chipertext[i];
+		
+		for(j = 0; j < 8; j++)
+		{
+		bit x = temp[j] << j;	
+		currentByte ^= x;			
+		}
+		
+		plaintext[i] = currentByte;
+		
+	}
+		
+}

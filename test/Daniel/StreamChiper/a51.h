@@ -36,8 +36,8 @@ void A51_warmUpStream(A51 *a51, unsigned int stream);
 bit  A51_update(A51 *a51);
 void A51_printStatus(A51 *a51);
 void A51_getStream(A51 *a51, bit *result, unsigned int stream);
-void A51_encrypt(A51 *a51, bit *plaintext, bit *cypertext, unsigned int length);
-void A51_decrypt(A51 *a51, bit *plaintext, bit *cypertext, unsigned int length);
+void A51_encrypt(A51 *a51, byte *plaintext, byte *chipertext, unsigned int length);
+void A51_decrypt(A51 *a51, byte *plaintext, byte *chipertext, unsigned int length);
 
 
 

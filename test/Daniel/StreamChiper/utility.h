@@ -10,6 +10,8 @@
 
 typedef u_int8_t bit;
 
+void arraySum(bit *pA , bit *pB , bit *result, unsigned int degree);
+void arrayMul(bit *pA , bit *pB , bit *field, bit *result, unsigned int degree); //degree is the length of the array == degree of the polynomial
 void rotate(bit * array, int shift , unsigned int degree);
 void printArray(bit *array, unsigned int x);
 int arrayToByte(bit *bits, bit *bytes, int length);

@@ -41,8 +41,8 @@ void MAJ5_warmUpStream(MAJ5 *maj5, unsigned int stream);
 bit  MAJ5_update(MAJ5 *maj5);
 void MAJ5_printStatus(MAJ5 *maj5);
 void MAJ5_getStream(MAJ5 *maj5, bit *result, unsigned int stream);
-void MAJ5_encrypt(MAJ5 *maj5, bit *plaintext, bit *cypertext, unsigned int length);
-void MAJ5_decrypt(MAJ5 *maj5, bit *plaintext, bit *cypertext, unsigned int length);
+void MAJ5_encrypt(MAJ5 *maj5, bit *plaintext, bit *chipertext, unsigned int length);
+void MAJ5_decrypt(MAJ5 *maj5, bit *plaintext, bit *chipertext, unsigned int length);
 
 
 #endif

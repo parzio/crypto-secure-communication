@@ -115,3 +115,50 @@ void A51_printStatus(A51 *a51){
 	}
 	printf("\n");	
 }
+
+void A51_encrypt(A51 *a51, byte *plaintext, byte *chipertext, unsigned int length){
+		
+	int i , j;
+	
+	for(i = 0; i < length; i++) // for each byte
+	{
+		bit temp[8];
+		A51_getStream(a51 , temp , 8);
+		
+		byte currentByte = plaintext[i];
+		
+		for(j = 0; j < 8; j++)
+		{
+		bit x = temp[j] << j;	
+		currentByte ^= x;			
+		}
+		
+		chipertext[i] = currentByte;
+		
+	}
+		
+}
+
+
+void A51_decrypt(A51 *a51, byte *plaintext, byte *chipertext, unsigned int length){
+		
+	int i , j;
+	
+	for(i = 0; i < length; i++) // for each byte
+	{
+		bit temp[8];
+		A51_getStream(a51 , temp , 8);
+		
+		byte currentByte = chipertext[i];
+		
+		for(j = 0; j < 8; j++)
+		{
+		bit x = temp[j] << j;	
+		currentByte ^= x;			
+		}
+		
+		plaintext[i] = currentByte;
+		
+	}
+		
+}

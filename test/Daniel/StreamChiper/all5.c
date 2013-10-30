@@ -98,3 +98,50 @@ void ALL5_printStatus(ALL5 *all5){
 	}
 	printf("\n");	
 }
+
+void ALL5_encrypt(ALL5 *all5, byte *plaintext, byte *chipertext, unsigned int length){
+		
+	int i , j;
+	
+	for(i = 0; i < length; i++) // for each byte
+	{
+		bit temp[8];
+		ALL5_getStream(all5 , temp , 8);
+		
+		byte currentByte = plaintext[i];
+		
+		for(j = 0; j < 8; j++)
+		{
+		bit x = temp[j] << j;	
+		currentByte ^= x;			
+		}
+		
+		chipertext[i] = currentByte;
+		
+	}
+		
+}
+
+
+void ALL5_decrypt(ALL5 *all5, byte *plaintext, byte *chipertext, unsigned int length){
+		
+	int i , j;
+	
+	for(i = 0; i < length; i++) // for each byte
+	{
+		bit temp[8];
+		ALL5_getStream(all5 , temp , 8);
+		
+		byte currentByte = chipertext[i];
+		
+		for(j = 0; j < 8; j++)
+		{
+		bit x = temp[j] << j;	
+		currentByte ^= x;			
+		}
+		
+		plaintext[i] = currentByte;
+		
+	}
+		
+}

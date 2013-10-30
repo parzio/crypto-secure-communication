@@ -4,7 +4,7 @@
 int main(int argc, char ** argv){
 	
 	unsigned int stream = 20;
-	bit result[stream];
+	//bit result[stream];
 
 	bit key[64] = {0 ,1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0,
 		1, 0, 1, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 1, 0, 
@@ -45,22 +45,24 @@ int main(int argc, char ** argv){
 
 	ALL5_delete(&all5);*/
 	
-	A51 a51;
-	
-	A51_init(&a51);
-	
-	A51_keyLoading(&a51, key, frameVector);
-
-	A51_warmUpStream(&a51 , 100);
+	byte mess[4] = {'C' , 'I' , 'A' , '0'};
 		
-	A51_printStatus(&a51);
-	
-	A51_getStream(&a51, result , stream);
-	
-	printArray(result , stream);
-	
-	A51_delete(&a51);
+	byte chip[4];
+
+	int i;
+	for(i = 0; i < 4; i++){
+		printf("%c , " , mess[i]);
+	}
 
 	return 0;
+	
+	/*unsigned int degree = 8;
+	
+	bit pA[] = 		{1 , 1 , 0 , 0 , 0 , 0 , 0 , 0};
+	bit pB[] = 		{0 , 0 , 1 , 1 , 0 , 0 , 0 , 0};
+	bit result[degree];
+	bit field[] = 	{1 , 1 , 1 , 0 , 1 , 0 , 0 , 0 , 1}; 
+
+	arrayMul(pA , pB , field, result , degree);*/
 		
 }

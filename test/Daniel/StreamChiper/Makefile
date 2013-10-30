@@ -1,10 +1,9 @@
 CC 		= gcc
 CFLAGS 		= -Wall -w
-OBJECT = $(wildcard *.o)
-CIAO   = $(wildcard *.c)
+OBJECT   = $(wildcard *.c)
 
-all: $(OBJECT) 
-	$(CC) $(CFLAGS) -c $(CIAO)
+all:
+	$(CC) $(CFLAGS) -c $(OBJECT)
 
 clean:
 	rm -f *.o 
