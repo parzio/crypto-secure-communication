@@ -33,17 +33,17 @@ int readFromPipe(const int in , byte *msg){
 		return -1;
 	}
 
-	char buffer[2048];
+	char buffer[MSG_MAX_SIZE];
 	
 	/* Read msg_size bytes from the channel */
 	read_len = read(in , (void *)buffer , msg_size);
-	
-	memcpy(msg, buffer , read_len);
-	
+
 	if( read_len < 0 ) {
 		perror("readMsg()");
 		return -1;
 	}
+	
+	memcpy(msg, buffer , read_len);
 	
 	return read_len;
 		
@@ -70,24 +70,31 @@ int writeInPipe(const int out , const byte *msg , u_int16_t size){
 
 int readFromFile(FILE *file, char *string){
 	
-	while(fgets(string, MSG_MAX_SIZE , file) != NULL){
-		
-		if(!((string[0] == '/') && (string[1] == '/')))
-			return 1;
-	}
+	int read;
+	size_t length = MSG_MAX_SIZE;
 	
-	return 0;
+	do{	
+	read = getline(&string , &length, file);
+	
+	if(read == -1)
+		return -1;
+	else
+		return read;
+	
+	}while((string[0] == '/') && (string[1] == '/'));
 	
 }
 
+void printMsg(char *header , char *string , u_int16_t size){	
+	int i ;
+	
+	fprintf(stderr , "%s ' " , header);
+	
+	for(i = 0; i < size ; i++)
+		if(string[i] != '\n')
+			fprintf(stderr , "%c" , string[i]);
+	
+	fprintf(stderr , " ' of length %d \n" , size);
 
-void printMsg(char *string , u_int16_t size){
-	
-	char buffer[2049];
-	
-	memcpy(buffer, string , size);
-	
-	buffer[size] = '\0';
-	
-	fprintf(stderr , "message : %s \n" , string);	
 }
+

@@ -1,13 +1,5 @@
-#include "common.h"
 
-typedef enum serverState {
-	WAITING , 			//Waiting for connection + handshake
-	HANDSHAKE , 		//Handshake completed, authenication
-	AUTHENTICATED ,   //Authentication done , key Exchange phase
-	COMMUNICATION , 	//Key and protocol established, communication
-	CLOSING,				//Closing message received, closing the connection
-	ERROR					//Error, forcing shutdown
-} serverState;
+#include "server.h"
 
 int openFifo(const char * pathname){
 	/* Recreate the FIFO in pathname */
@@ -21,41 +13,102 @@ int openFifo(const char * pathname){
 	return (openChannel(pathname));
 }
 
-int handshake(int inputChannel, int outputChannel , char * msg){
+serverState handshake(){
 
-	if(strncmp(msg , ClientOpenConnection , strlen(ClientOpenConnection)) != 0)
+	fprintf(stderr , "-----------------------------------------------------------\n **** Waiting for handshake ****\n\n");	
+	
+	char buffer[MSG_MAX_SIZE];
+	
+	int length = readFromPipe(inputChannel ,(byte *) buffer);
+				
+	printMsg("Client to server ---> " , buffer , length);	
+	
+	if(strncmp(buffer , ClientOpenConnection , length) != 0 || length != strlen(ClientOpenConnection))
 	{
-		fprintf(stderr, "Handshake error, the client hello is wrong\n");
-		return -1;
+		fprintf(stderr, "Handshake read error\n");
+		return ERROR;
 	}
+		
 	if(writeInPipe(outputChannel,(byte *) ServerOpenConnection , strlen(ServerOpenConnection)) < 0)
 	{
-		fprintf(stderr, "Handshake error, the server couldn't send the hello message\n");
-		return -1;
+		fprintf(stderr, "Handshake write error\n");
+		return ERROR;
 	}
-
-	return 1;
+	
+	printMsg("Server to client ---> " , ServerOpenConnection , strlen(ServerOpenConnection));
+	
+	return HANDSHAKE;
 }
 
-int closeConnection(int inputChannel , int outputChannel){
+serverState authentication(){
+	
+	return AUTHENTICATED;
+	
+}
+
+serverState keyExchange(){
+	
+	return COMMUNICATION;
+	
+}
+
+serverState communication(){	
+	
+	char buffer[MSG_MAX_SIZE];
+	
+	int length = 0;
+
+		do{
+			
+		length = readFromPipe(inputChannel ,(byte *) buffer);
+		
+		if(length == -1)
+			return ERROR;
+			
+		//decrypt
+		
+		printMsg("Client to server ---> " , buffer , length);	
+			
+		if(strncmp(buffer , ClientCloseConnection , length) == 0 && length == strlen(ClientCloseConnection))
+			return CLOSING;
+		
+		char response[MSG_MAX_SIZE];
+		
+		strcpy(response , "ACK MSG : ");
+		strncat(response , buffer , length);
+		int res_length = strlen("ACK MSG : ") + length;
+
+		if(writeInPipe(outputChannel,(byte *) response , res_length) < 0)
+		{
+			fprintf(stderr , "\n **** communication write error **** \n\n");
+			return ERROR;	
+		}
+		
+		printMsg("Server to client ---> " , response , res_length);	
+		fprintf(stderr , "\n");
+			
+		}while(1);
+		
+}
+
+serverState closeConnection(){
 	
 	if(writeInPipe(outputChannel,(byte *) ServerCloseConnection , strlen(ServerCloseConnection)) < 0)
 	{
-		perror("closing server error");
-		return -1;	
+		fprintf(stderr , "\n **** closing falied **** \n\n");
+		return ERROR;	
 	}
-
-	return 1;
+	
+	printMsg("Server to client ---> " , ServerOpenConnection , strlen(ServerOpenConnection));
+					
+	return WAITING;
 	
 }
 
-int main(int argc, char ** argv)
-{
-	int inputChannel, outputChannel;
-	serverState state = WAITING;
-	char msg[2048];
-	u_int16_t length;
+int main(int argc, char ** argv){
 	
+	serverState state = WAITING;
+
 	/* Mandatory arguments */
 	if( !argv[1] || !argv[2] || !argv[3] ) {
 		fprintf(stderr,"server [server->client fifo] [client->server fifo] [password file]\n");
@@ -71,54 +124,51 @@ int main(int argc, char ** argv)
 	inputChannel = openFifo(argv[2]);
 	
 	do{
-		
-		if(state == WAITING)
-			fprintf(stderr , "-----------------------------------------------------------\nWaiting for connection\n");
-		
-		length = readFromPipe(inputChannel ,(byte *) msg);
-		
-		if(length == -1) //error in reading the message
-			state = ERROR;
-		
-		if(strncmp(msg , ClientCloseConnection , length) == 0)	//if the next message is the client closing message
-			state = CLOSING;
-		
+
 		switch(state){
 			
-			case WAITING :
-				if(handshake(inputChannel , outputChannel , msg) == -1)	//handshake error
-				{
-					fprintf(stderr , "Handshake error \n");	
-					state = ERROR;
-				}
-				else {
-					state = HANDSHAKE;
-					fprintf(stderr , "Handshake completed\n");
-				}
+			case WAITING : state = handshake();
+
+				if(state == ERROR)	//handshake error
+					fprintf(stderr , "\n **** handshake falied **** \n\n");
+				else 
+					fprintf(stderr , "\n **** handshake succeded **** \n\n");
+				break;
 			
-			case HANDSHAKE : break;//call authenication
+			case HANDSHAKE : state = authentication(); 
+				
+				break;
 			
-			case AUTHENTICATED : break; //call for key exchange
+			case AUTHENTICATED : state = keyExchange();
 				
-			case COMMUNICATION : break; //communication 
+				break;
 				
-			case CLOSING	: 
-				fprintf(stderr , "Client asked for closing, closing connection\n");
+			case COMMUNICATION : state = communication();
+			
+				break;
 				
-				closeConnection(inputChannel , outputChannel); 
-				state = WAITING;
+			case CLOSING	: state = closeConnection(); 
+			
+				outputChannel = openFifo(argv[1]);
+				inputChannel = openFifo(argv[2]);
 	
-				fprintf(stderr , "Connection closed\n");
+				if(state == ERROR)	//handshake error
+					fprintf(stderr , "\n **** closing falied **** \n\n");
+				else 
+					fprintf(stderr , "\n **** closing succeded **** \n\n");
+				break;
+
+			case ERROR	 :
 				
-				break; //close connection
-			
-			case ERROR	 : 				
-				fprintf(stderr , "Error during the communication, closing the connection\n");
+				fprintf(stderr , "\nError during the communication, force shutodown of the client\n\n");
 				
-				closeConnection(inputChannel , outputChannel); 
+				closeConnection(); 
 				state = WAITING;
-	
-				fprintf(stderr , "Connection closed\n");
+				
+				outputChannel = openFifo(argv[1]);
+				inputChannel = openFifo(argv[2]);
+				
+				fprintf(stderr , "\n **** closing succeded **** \n\n");
 				
 				break; //close connection
 				
@@ -126,20 +176,8 @@ int main(int argc, char ** argv)
 		
 		}
 
-
-		//Authentication
-		
-		//key exange 
-		
-		//encrypted communication
-		
-
 	}while(1);
 	
-	
-	
-
-
 
 	exit(0);
 }

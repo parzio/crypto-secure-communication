@@ -1,5 +1,5 @@
-SERVER_OBJS=server.o common.o
-CLIENT_OBJS=client.o common.o
+SERVER_OBJS=server.o Utils/common.o
+CLIENT_OBJS=client.o Utils/common.o
 CC=gcc
 CFLAGS=-Wall
 

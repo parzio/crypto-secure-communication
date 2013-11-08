@@ -1,72 +1,9 @@
-#include "common.h"
+#include "client.h"
 
-typedef enum clientState {
-	HANDSHAKE , 		//Handshake completed, authenication
-	AUTHENTICATED ,   //Authentication done , key Exchange phase
-	COMMUNICATION , 	//Key and protocol established, communication
-	CLOSING				//Send close message, wait for response and close
-} clientState;
-
-int askConnection(int inputChannel, int outputChannel){
+int main(int argc, char ** argv){
 	
-	char msg[2048];
-	
-	fprintf(stderr,"Asking for connection\n");
-	
-	if(writeInPipe(outputChannel, (byte *) ClientOpenConnection , strlen(ClientOpenConnection)) < 0)
-	{
-		perror("handshake client error");
-		return -1;	
-	}
-
-	readFromPipe(inputChannel ,(byte *) msg);
-	
-	if(strncmp(msg , ServerOpenConnection , strlen(ServerOpenConnection)) != 0)
-	{
-		perror("handshake client error");
-		return -1;
-	}
-		
-	return 1;
-}
-
-
-void closeConnection(int inputChannel , int outputChannel){
-	
-	char msg[2048];
-	
-	fprintf(stderr,"Sending closing connection message : %s\n" , ClientCloseConnection);
-	
-	if(writeInPipe(outputChannel, (byte *) ClientCloseConnection , strlen(ClientCloseConnection)) < 0)
-	{
-		perror("Closing client error");
-		return;	
-	}
-	
-	fprintf(stderr , "message written , waiting for response\n");
-	
-	readFromPipe(inputChannel ,(byte *) msg);
-	
-	if(strncmp(msg , ServerCloseConnection , strlen(ServerCloseConnection)) != 0)
-	{
-		perror("Closing client error");
-		return;
-	}
-	
-	fprintf(stderr , "Connection closed\n\n");
-	
-	closeChannel(inputChannel);
-	closeChannel(outputChannel);
-
-}
-
-int main(int argc, char ** argv)
-{
-	int inputChannel, outputChannel;
 	clientState state;
-	//char msg[2048];
-	//u_int16_t length;
-
+	
 	/* Mandatory arguments */
 	if( !argv[1] || !argv[2] || !argv[3] || !argv[4] ) {
 		fprintf(stderr,"client [server->client fifo] [client->server fifo] [password file] [username]\n");
@@ -74,36 +11,168 @@ int main(int argc, char ** argv)
 	}
 
 	/* Create connection with the server */
-	fprintf(stderr,"Create connection...\n");
+	fprintf(stderr,"Opening fifos...\n\n");
 	outputChannel = openChannel(argv[2]);
 	inputChannel  = openChannel(argv[1]);
 	
+	state = handshake();
 	
-	if(askConnection(inputChannel , outputChannel) == -1) //handshake error
+	if(state == SHUTDOWN) //handshake error
 	{
-		fprintf(stderr , "handshake falied \n");
-		state = CLOSING;	
+		fprintf(stderr , "\n **** handshake falied **** \n\n");
+		fprintf(stderr , "\n **** closing connection **** \n\n");	
+		exit(0);
 	}
 	else
+		fprintf(stderr , "\n **** handshake succeded **** \n\n");
+	
+	
+	state = authentication();
+
+	if(state == SHUTDOWN) //authentication error
 	{
-		fprintf(stderr , "handshake succeded \n");
-		state = CLOSING;
+		fprintf(stderr , "\n **** authentication falied **** \n\n");
+		fprintf(stderr , "\n **** closing connection **** \n\n");	
+		exit(0);
+	}
+	else
+		fprintf(stderr , "\n **** authentication succeded **** \n\n");
+	
+	state = keyExchange();
+
+	
+	state = communication();
+
+	if(state == SHUTDOWN) //authentication error
+	{
+		fprintf(stderr , "\n **** communication falied **** \n\n");
+		fprintf(stderr , "\n **** closing connection **** \n\n");	
+		exit(0);
 	}
 	
-	switch(state){
-			
-			case HANDSHAKE : break;//call authenication
-			
-			case AUTHENTICATED : break; //call for key exchange
-				
-			case COMMUNICATION : break; //communication 
-				
-			case CLOSING : 
-				closeConnection(inputChannel , outputChannel); 
-				break;
-				
-			default : break;
-	}
+	closeConnection();
 	
 	return 0;
+}
+
+clientState handshake(){
+	
+	char msg[MSG_MAX_SIZE];
+	
+	fprintf(stderr , " **** handshake phase **** \n\n");
+	
+	if(writeInPipe(outputChannel, (byte *) ClientOpenConnection , strlen(ClientOpenConnection)) < 0)
+	{
+		fprintf(stderr, "handshake write error \n");
+		return SHUTDOWN;	
+	}
+	
+	printMsg("Client to server ---> " , ClientOpenConnection , strlen(ClientOpenConnection));
+
+	readFromPipe(inputChannel ,(byte *) msg);
+	
+	if(strncmp(msg , ServerOpenConnection , strlen(ServerOpenConnection)) != 0)
+	{
+		fprintf(stderr, "handshake read error \n");
+		return SHUTDOWN;
+	}
+	
+	printMsg("Server to client ---> " , ServerOpenConnection , strlen(ServerOpenConnection));
+		
+	return HANDSHAKE;
+}
+
+clientState authentication(){
+	return AUTHENTICATED;
+}
+
+clientState keyExchange(){
+	return COMMUNICATION;
+}
+
+clientState communication(){
+	
+	char msg[MSG_MAX_SIZE];
+	int msgLength = 0;
+	
+	FILE *file = fopen(ClientCommunicationFile, "rt");
+	
+	if(file == NULL){
+		perror("Client txt file ");
+		return CLOSING;
+	}
+	
+	fprintf(stderr , " **** Communication phase **** \n\n");
+	
+	do{
+	
+	msgLength = readFromFile(file , msg);
+	
+	if(msgLength == -1)
+	{	
+		fprintf(stderr , "\n **** Communication phase ended **** \n\n");
+		return CLOSING;
+	}
+	
+	//Encrypt msg 
+	
+	if(writeInPipe(outputChannel, (byte *) msg , msgLength) < 0)
+	{
+		fprintf(stderr , " **** Communication phase write error **** \n\n");
+		return CLOSING;	
+	}
+
+	printMsg("Client to server ---> " ,msg ,(u_int16_t) msgLength);
+	
+	msgLength = readFromPipe(inputChannel ,(byte *) msg);
+
+	if(msgLength < 0)
+	{
+		fprintf(stderr , " **** Communication phase read error **** \n\n");
+		return CLOSING;
+	}
+	
+	//decrypt
+	
+	if(strncmp(msg , ServerCloseConnection , strlen(ServerCloseConnection)) == 0)	
+		return SHUTDOWN;
+	
+	printMsg("Server to client ---> " ,msg ,(u_int16_t) msgLength);
+	
+	fprintf(stderr , "\n");
+
+	}while(1);
+	
+	return SHUTDOWN;
+	
+}
+
+void closeConnection(){
+	
+	char msg[MSG_MAX_SIZE];
+	
+	fprintf(stderr,"\n **** Closing phase **** \n\n");
+
+	if(writeInPipe(outputChannel, (byte *) ClientCloseConnection , strlen(ClientCloseConnection)) < 0)
+	{
+		fprintf(stderr,"Closing write error \n");
+		return;	
+	}
+	
+	printMsg("Client to server ---> " , ClientCloseConnection , strlen(ClientCloseConnection));
+	
+	readFromPipe(inputChannel ,(byte *) msg);
+	
+	if(strncmp(msg , ServerCloseConnection , strlen(ServerCloseConnection)) != 0)
+	{
+		fprintf(stderr,"Closing read error \n");
+		return;
+	}
+	printMsg("Server to client ---> " , ServerCloseConnection , strlen(ServerCloseConnection));
+	
+	fprintf(stderr,"\n **** Closing succeded **** \n\n");
+
+	closeChannel(inputChannel);
+	closeChannel(outputChannel);
+
 }
