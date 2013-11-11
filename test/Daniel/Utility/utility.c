@@ -36,6 +36,7 @@ void arrayMul(bit *pA , bit *pB , bit *field, bit *result, unsigned int degree){
 		}		
 	}
 
+
 	for(i = (degree * 2) - 1; i >= degree; i--)
 	{
 		if(temp[i] == 1)
@@ -51,12 +52,6 @@ void arrayMul(bit *pA , bit *pB , bit *field, bit *result, unsigned int degree){
 	
 	for(i = 0; i < degree; i++)
 		result[i] = temp[i];
-		
-	printArray(pA , degree);
-	printArray(pB , degree);
-	printArray(field , degree + 1);	
-	printArray(temp , degree * 2);
-
 }
 
 int arrayToByte(bit *bits, bit *bytes, int length){
@@ -111,3 +106,52 @@ void rotate(bit * array, int shift , unsigned int degree){
 	for(i=0; i < degree; i++)
 		array[i] = buffer[i];	
 }
+
+void inverteArray(bit *array, unsigned int length){
+	
+	int i;
+	bit buffer[length];
+	
+	length --;
+	
+	for(i = 0; i <= length; i++)
+		buffer[length - i] = array[i];
+	
+	for(i = 0; i <= length; i++)
+		array[i] = buffer[i];	
+}
+
+void hexToBinary(bit * array, u_int64_t hex, unsigned int length){
+	
+	int i;
+	for(i = 0; i < length; i++)
+	{
+		if(hex & (1 << i))
+			array[i] = 1;
+		else
+			array[i] = 0;
+	}
+}
+/*
+void BinaryToHex(bit * array, u_int64_t hex, unsigned int length){
+	
+	int i;
+	for(i = 0; i < length; i++)
+	{
+		if(hex & (1 << i))
+			array[i] = 1;
+		else
+			array[i] = 0;
+	}
+}
+
+*/
+void arrayCopy(bit * a , bit * b , int length){
+	
+	int i;
+	
+	for(i = 0; i < length; i++)
+		b[i] = a[i];
+	
+}
+

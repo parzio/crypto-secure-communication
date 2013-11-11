@@ -8,7 +8,7 @@
 #include <unistd.h>
 #include <string.h>
 
-#include "utility.h"
+#include "../Utility/utility.h"
 
 typedef u_int8_t bit;
 typedef u_int8_t byte;

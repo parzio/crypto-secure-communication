@@ -55,7 +55,7 @@ void deleteStreamChiper(streamChiper *chiper){
 
 void encrypt(streamChiper *chiper , byte *plaintext, byte *chipertext, int length){
 	
-/*	switch(chiper->type){		
+	switch(chiper->type){		
 		case Stream_A51 : {
 			A51_encrypt(&chiper->a51, plaintext, chipertext, (unsigned) length);
 			break;
@@ -68,11 +68,11 @@ void encrypt(streamChiper *chiper , byte *plaintext, byte *chipertext, int lengt
 			ALL5_encrypt(&chiper->all5, plaintext, chipertext, (unsigned) length);
 			break;
 		}	
-		default : break;		*/
-	//}	
+		default : break;		
+	}	
 }
 void decrypt(streamChiper *chiper , byte *plaintext, byte *chipertext, int length){
-	/*
+	
 	switch(chiper->type){		
 		case Stream_A51 : {
 			A51_decrypt(&chiper->a51, plaintext, chipertext, (unsigned) length);
@@ -86,7 +86,7 @@ void decrypt(streamChiper *chiper , byte *plaintext, byte *chipertext, int lengt
 			ALL5_decrypt(&chiper->all5, plaintext, chipertext, (unsigned) length);
 			break;
 		}	
-		default : break;		*/
-//	}			
+		default : break;		
+	}			
 }
 
