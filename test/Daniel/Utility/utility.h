@@ -17,7 +17,8 @@ void printArray(bit *array, unsigned int x);
 void inverteArray(bit *array, unsigned int length);
 void arrayCopy(bit * a , bit * b , int length);
 
-void hexToBinary(bit * array, u_int64_t hex, unsigned int length);
+void hexToBinary(bit * array, char * hex);
+void printHex(bit * array, unsigned int length);
 
 
 #endif

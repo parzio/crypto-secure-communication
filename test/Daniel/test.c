@@ -91,24 +91,52 @@ int main(int argc, char ** argv){
 
 	printArray(result , degree);*/
 	
-	bit key[] = {1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0}; 
-	bit plain[] = {1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0};
+	char * hex_key = "FB7F50";
 	
-	char * hex = "8B7846";
+	bit key[24] = {1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0}; 
+	bit plain[24] = {1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0};
 	
-	printf("hex --> %X \n \n" , hex);
+	char * hex_meg = "8B7846";
+
+	hexToBinary(plain , hex_meg);
+	hexToBinary(key , hex_key);
 	
-	bit array[24];
+	printHex(plain , 24);
 	
-	hexToBinary(array , hex , 6);
-	
-	printArray(array , 24);
-/*
 	bunny24_encrypt(plain , key);
+
+	bunny24_decrypt(plain , key);
 	
-	printArray(plain , 24);
-*/
+	printHex(plain , 24);
 	
+	
+	bit k1[6] = {0, 1, 0, 0, 0, 0};
+	bit k2[6] = {0, 1, 0, 0, 0, 0};
+	bit k3[6] = {0, 1, 0, 0, 0, 0};	
+	bit k4[6] = {0, 1, 0, 0, 0, 0};
+	
+	sbox(k1 , 0);
+	sbox(k2 , 1);
+	sbox(k3 , 2);
+	sbox(k4 , 3);
+	
+	printArray(k1 , 6);
+	printArray(k2 , 6);
+	printArray(k3 , 6);
+	printArray(k4 , 6);
+
+	sbox(k1 , 0);
+	sbox(k2 , 1);
+	sbox(k3 , 2);
+	sbox(k4 , 3);
 	
 
+	
+	printArray(k1 , 6);
+	printArray(k2 , 6);
+	printArray(k3 , 6);
+	printArray(k4 , 6);
+	
+	
+	
 }

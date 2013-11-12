@@ -1,12 +1,12 @@
 
 #include "Bunny24.h"
 
-void bunny24_encrypt(bit * block , bit * key)
-{
+void bunny24_encrypt(bit block[block_length] , bit key[key_length]){
+	
 	blockInversion(block);
 	blockInversion(key);
 
-	bit keys[16][24];
+	bit keys[16][key_length];
 	
 	keySchedule(key , keys);
 
@@ -18,10 +18,32 @@ void bunny24_encrypt(bit * block , bit * key)
 		round(block , keys[i]);
 	
 	blockInversion(block);
+	blockInversion(key);
 	
 }
 
-void keySchedule(bit * key , bit schedule[16][24]){
+void bunny24_decrypt(bit block[block_length] , bit key[key_length]){
+	
+	blockInversion(block);
+	blockInversion(key);
+
+	bit keys[16][key_length];
+	
+	keySchedule(key , keys);
+
+	int i;
+
+	for(i = 15; i > 0; i--)					// 15 rounds
+		inverse_round(block , keys[i]);
+	
+	arraySum(block , keys[0] , block , block_length); // first XOR
+	
+	blockInversion(block);
+	blockInversion(key);
+	
+}
+
+void keySchedule(bit key[key_length] , bit schedule[16][key_length]){
 	
 	//Step 1
 
@@ -95,7 +117,6 @@ void keySchedule(bit * key , bit schedule[16][24]){
 	}
 }
 
-
 void round(bit block[block_length], bit key[key_length]){
 	
 	sboxLayer(block);
@@ -103,6 +124,16 @@ void round(bit block[block_length], bit key[key_length]){
 	mixingLayer(block);
 	
 	arraySum(block , key , block , block_length);
+			
+}
+
+void inverse_round(bit block[block_length], bit key[key_length]){
+	
+	arraySum(block , key , block , block_length);
+		
+	inverse_mixingLayer(block);
+		
+	sboxLayer(block);
 			
 }
 
@@ -118,6 +149,38 @@ void mixingLayer(bit block[block_length]){
 	for(i = 0; i < 4; i++)
 		setChunk(block , chunk_buffer[i] , i);
 	
+}
+
+void inverse_mixingLayer(bit block[block_length]){
+	
+	int i;
+	
+	bit chunk_buffer[4][chunk_length];
+	
+	for(i = 0; i < 4; i++)	//for each column
+		inverse_mixingLayerMatrixMul(block , chunk_buffer[i] , i);
+		
+	for(i = 0; i < 4; i++)
+		setChunk(block , chunk_buffer[i] , i);
+	
+}
+
+void inverse_mixingLayerMatrixMul(bit block[block_length] , bit result_chunk[chunk_length], unsigned int column){
+	
+	int i;
+	
+	for(i = 0; i < chunk_length; i++)
+		result_chunk[i] = 0;
+
+	for(i = 0; i < 4; i++)
+	{
+		bit chunk[chunk_length];
+		getChunk(block , chunk , i);
+		
+		arrayMul(chunk , inverse_mixingMatrix[i][column] , primitivePoly , chunk , primitivePolyDegree);
+		
+		arraySum(result_chunk , chunk , result_chunk , chunk_length);	
+	}	
 }
 
 void mixingLayerMatrixMul(bit block[block_length] , bit result_chunk[chunk_length], unsigned int column){
@@ -189,7 +252,59 @@ void sboxLayer(bit block[block_length]){
 	}	
 }
 
+void inverse_sboxLayer(bit block[block_length]){
+	
+	int i;
+	
+	for(i = 0; i < 4; i++)
+	{
+		bit chunk[chunk_length];	
+		getChunk(block , chunk , i);
+		
+		inverse_sbox(chunk , i);
+		
+		setChunk(block , chunk , i);		
+	}	
+}
+
 void sbox(bit chunk[chunk_length] , int index){
+	int i;
+	bit result[chunk_length];
+	
+	for(i = 0; i < chunk_length; i++)
+		result[i] = chunk[i];;
+	
+	switch(index){
+		case 0: 	
+			for( i = 1; i < sbox1_power; i++)
+				arrayMul(result , chunk , primitivePoly , result , primitivePolyDegree);
+			break;
+			
+		case 1:
+			for( i = 1; i < sbox2_power; i++)
+				arrayMul(result , chunk , primitivePoly , result , primitivePolyDegree);
+			break;
+			
+		case 2:
+			for( i = 1; i < sbox3_power; i++)
+				arrayMul(result , chunk , primitivePoly , result , primitivePolyDegree);
+			break;
+			
+		case 3:
+			for( i = 1; i < sbox4_power; i++)
+				arrayMul(result , chunk , primitivePoly , result , primitivePolyDegree);
+			result[2] ^= 1;
+			break;
+			
+		default : printf("sbox index error \n"); break;
+	}
+
+	for(i = 0; i < chunk_length; i++)
+		chunk[i] = result[i];	
+	
+}
+
+void inverse_sbox(bit chunk[chunk_length] , int index){
 	int i;
 	bit result[chunk_length];
 	

@@ -121,31 +121,90 @@ void inverteArray(bit *array, unsigned int length){
 		array[i] = buffer[i];	
 }
 
-void hexToBinary(bit * array, u_int64_t hex, unsigned int length){
+void hexToBinary(bit * array, char * hex){
 	
-	int i;
-	for(i = 0; i < length; i++)
-	{
-		if(hex & (1 << i))
-			array[i] = 1;
-		else
-			array[i] = 0;
-	}
-}
-/*
-void BinaryToHex(bit * array, u_int64_t hex, unsigned int length){
+	//--> not correct but equal to the one of the prof
 	
-	int i;
-	for(i = 0; i < length; i++)
+	int i, j , index = strlen(hex) * 4 - 1;
+		
+	for(i = strlen(hex) - 1; i >= 0; i--)
 	{
-		if(hex & (1 << i))
-			array[i] = 1;
-		else
-			array[i] = 0;
+		u_int8_t num;
+		
+		switch(hex[i]){
+			case '0' : num = 0;  break;
+			case '1' : num = 1;  break;
+			case '2' : num = 2;  break;
+			case '3' : num = 3;  break;	
+			case '4' : num = 4;  break;
+			case '5' : num = 5;  break;	
+			case '6' : num = 6;  break;
+			case '7' : num = 7;  break;	
+			case '8' : num = 8;  break;
+			case '9' : num = 9;  break;
+			case 'A' : num = 10; break;	
+			case 'B' : num = 11; break;
+			case 'C' : num = 12; break;	
+			case 'D' : num = 13; break;
+			case 'E' : num = 14; break;
+			case 'F' : num = 15; break;
+			default : printf("error hex \n\n"); break;
+ 		}
+
+		for(j = 0; j < 4; j++)
+		{
+			if(num & (1 << j))
+				array[index] = 1;
+			else
+				array[index] = 0;
+			index--;
+		}
 	}
 }
 
-*/
+void printHex(bit * array, unsigned int length){
+	
+	int ind = length / 4 , num = 0 , i , j;
+
+	char x;
+	
+	for(i = 0; i < ind; i++)
+	{	
+		for(j = 3; j >= 0; j--)
+		{
+			if(array[i * 4 + j] == 1)
+				num += (1 << (3 - j));
+		}
+
+		switch(num){
+			case 0 : x = '0';  break;
+			case 1 : x = '1';  break;
+			case 2 : x = '2';  break;
+			case 3 : x = '3';  break;	
+			case 4 : x = '4';  break;
+			case 5 : x = '5';  break;	
+			case 6 : x = '6';  break;
+			case 7 : x = '7';  break;	
+			case 8 : x = '8';  break;
+			case 9 : x = '9';  break;
+			case 10 : x = 'A'; break;	
+			case 11 : x = 'B'; break;
+			case 12 : x = 'C'; break;	
+			case 13 : x = 'D'; break;
+			case 14 : x = 'E'; break;
+			case 15 : x = 'F'; break;
+			default : printf("error hex \n\n"); break;
+ 		}
+		
+		printf("%c" , x);
+		
+		num = 0;	
+		
+	}
+	
+	printf("\n");
+}
+
 void arrayCopy(bit * a , bit * b , int length){
 	
 	int i;
