@@ -133,7 +133,7 @@ void inverse_round(bit block[block_length], bit key[key_length]){
 		
 	inverse_mixingLayer(block);
 		
-	sboxLayer(block);
+	inverse_sboxLayer(block);
 			
 }
 
@@ -272,7 +272,7 @@ void sbox(bit chunk[chunk_length] , int index){
 	bit result[chunk_length];
 	
 	for(i = 0; i < chunk_length; i++)
-		result[i] = chunk[i];;
+		result[i] = chunk[i];
 	
 	switch(index){
 		case 0: 	
@@ -309,28 +309,29 @@ void inverse_sbox(bit chunk[chunk_length] , int index){
 	bit result[chunk_length];
 	
 	for(i = 0; i < chunk_length; i++)
-		result[i] = chunk[i];;
+		result[i] = chunk[i];
 	
 	switch(index){
 		case 0: 	
-			for( i = 1; i < sbox1_power; i++)
+			for( i = 1; i < inverse_sbox1_power; i++)
 				arrayMul(result , chunk , primitivePoly , result , primitivePolyDegree);
 			break;
 			
 		case 1:
-			for( i = 1; i < sbox2_power; i++)
+			for( i = 1; i < inverse_sbox2_power; i++)
 				arrayMul(result , chunk , primitivePoly , result , primitivePolyDegree);
 			break;
 			
 		case 2:
-			for( i = 1; i < sbox3_power; i++)
+			for( i = 1; i < inverse_sbox3_power; i++)
 				arrayMul(result , chunk , primitivePoly , result , primitivePolyDegree);
 			break;
 			
 		case 3:
-			for( i = 1; i < sbox4_power; i++)
-				arrayMul(result , chunk , primitivePoly , result , primitivePolyDegree);
 			result[2] ^= 1;
+			chunk[2] ^= 1;			
+			for(i = 1; i < inverse_sbox4_power; i++)
+				arrayMul(result , chunk , primitivePoly , result , primitivePolyDegree);
 			break;
 			
 		default : printf("sbox index error \n"); break;

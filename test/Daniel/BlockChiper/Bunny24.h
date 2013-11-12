@@ -16,8 +16,8 @@ static unsigned int sbox3_power = 17;
 static unsigned int sbox4_power = 62;
 
 static unsigned int inverse_sbox1_power = 62;
-static unsigned int inverse_sbox2_power = 5;
-static unsigned int inverse_sbox3_power = 17;
+static unsigned int inverse_sbox2_power = 2306;
+static unsigned int inverse_sbox3_power = 3617;
 static unsigned int inverse_sbox4_power = 62;
 
 
@@ -31,9 +31,9 @@ static bit mixingMatrix[4][4][6] = {
 	
 static bit inverse_mixingMatrix[4][4][6] = {
 	{	{1 , 0 , 1 , 1 , 1 , 0} , {1 , 1 , 0 , 0 , 0 , 0} , {1 , 1 , 0 , 1 , 0 , 0} , {1 , 0 , 0 , 1 , 1 , 0}	}	,
-	{	{1 , 0 , 0 , 0 , 1 , 0} , {1 , 1 , 1 , 1 , 0 , 1} , {1 , 0 , 1 , 1 , 1 , 1} , {1 , 0 , 1 , 1 , 1 , 1}	}	,
+	{	{1 , 0 , 0 , 0 , 1 , 0} , {1 , 1 , 1 , 1 , 0 , 1} , {0 , 1 , 1 , 1 , 1 , 1} , {1 , 0 , 1 , 1 , 1 , 1}	}	,
 	{	{1 , 1 , 1 , 0 , 0 , 0} , {1 , 1 , 1 , 0 , 1 , 0} , {1 , 0 , 0 , 1 , 1 , 1} , {0 , 0 , 1 , 1 , 0 , 0}	}	,
-	{	{1 , 0 , 0 , 1 , 0 , 0} , {1 , 0 , 0 , 1 , 1 , 1} , {1 , 0 , 1 , 1 , 0 , 0} , {1 , 0 , 0 , 1 , 0 , 1}	}};
+	{	{0 , 1 , 0 , 1 , 0 , 0} , {0 , 1 , 0 , 1 , 1 , 1} , {1 , 0 , 1 , 1 , 0 , 0} , {1 , 0 , 0 , 1 , 0 , 1}	}};
 
 
 
