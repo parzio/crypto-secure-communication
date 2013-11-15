@@ -16,8 +16,8 @@ static unsigned int sbox3_power = 17;
 static unsigned int sbox4_power = 62;
 
 static unsigned int inverse_sbox1_power = 62;
-static unsigned int inverse_sbox2_power = 2306;
-static unsigned int inverse_sbox3_power = 3617;
+static unsigned int inverse_sbox2_power = 38;
+static unsigned int inverse_sbox3_power = 26;
 static unsigned int inverse_sbox4_power = 62;
 
 
@@ -59,5 +59,7 @@ void inverse_mixingLayer(bit block[block_length]);
 void inverse_mixingLayerMatrixMul(bit block[block_length] , bit result_chunk[chunk_length], unsigned int column);
 void inverse_sboxLayer(bit chunk[chunk_length]);
 void inverse_sbox(bit chunk[chunk_length] , int index);
+
+void bunny24_bruteForce(bit plain[block_length] , bit crypt[block_length]);
 
 #endif

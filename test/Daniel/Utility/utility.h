@@ -20,5 +20,7 @@ void arrayCopy(bit * a , bit * b , int length);
 void hexToBinary(bit * array, char * hex);
 void printHex(bit * array, unsigned int length);
 
+int arrayEqual(bit *a1 , bit *a2 , unsigned int length);
+
 
 #endif

@@ -214,3 +214,14 @@ void arrayCopy(bit * a , bit * b , int length){
 	
 }
 
+int arrayEqual(bit *a1 , bit *a2 , unsigned int length){
+	
+	int i;
+	for(i = 0; i < length; i++)
+		if(a1[i] != a2[i])
+			return -1;
+	
+	return 0;
+		
+}
+

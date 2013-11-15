@@ -342,4 +342,41 @@ void inverse_sbox(bit chunk[chunk_length] , int index){
 	
 }
 
+void bunny24_bruteForce(bit plain[block_length] , bit crypt[block_length]){
+	
+	unsigned int i, end = 1024 * 1024 * 16;
+	
+	bit test[block_length];
+	bit testp[block_length];
+	
+	for(i = 0; i < end; i++)
+	{
+		arrayCopy(plain , testp , 24);
+		int j;
+		for(j = 0; j < 24; j++)
+		{
+			if(i & (1 << j))
+				test[j] = 1;
+			else
+				test[j] = 0;
+			
+		}
+		
+		//printArray(test , 24);
+		
+		bunny24_encrypt(testp , test);
+		
+		if(arrayEqual(testp , crypt , 24) == 0)
+		{
+			printHex(test , 24);
+			return;
+		}
+		
+		//printf("fail key %d \n " , i);
+		
+	}
+	
+	
+}
+
 
