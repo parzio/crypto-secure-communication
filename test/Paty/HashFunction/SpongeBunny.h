@@ -2,10 +2,11 @@
 #define SPONGE_BUNNY
 
 #define HASH_LENGTH 160
+#include "../Utility/utility.h"
 
 typedef struct message
 {
-	int* value;
+	bit* value;
 	int length;
 }message;
 
