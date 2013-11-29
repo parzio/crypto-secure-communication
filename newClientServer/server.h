@@ -3,6 +3,8 @@
 
 #include "Utils/common.h"
 
+#define ServerCommunicationFile "server_folder/clientMSG.txt"
+
 typedef enum serverState {
 	WAITING , 			//Waiting for connection + handshake
 	HANDSHAKE , 		//Handshake completed, authenication

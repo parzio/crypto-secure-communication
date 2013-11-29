@@ -57,30 +57,47 @@ serverState communication(){
 	char buffer[MSG_MAX_SIZE];
 	
 	int length = 0;
+	
+		FILE *file = fopen(ServerCommunicationFile, "w+");
+	
+		if(file == NULL){
+			perror("Server txt file ");
+			return ERROR;
+		}
 
 		do{
 			
 		length = readFromPipe(inputChannel ,(byte *) buffer);
 		
 		if(length == -1)
+		{
+			fclose(file);
 			return ERROR;
-			
+		}
+		
 		//decrypt
 		
-		printMsg("Client to server ---> " , buffer , length);	
-			
-		if(strncmp(buffer , ClientCloseConnection , length) == 0 && length == strlen(ClientCloseConnection))
+		printMsg("Client to server ---> " , buffer , length);
+
+		if(strncmp(buffer , ClientCloseConnection , length) == 0 && length == strlen(ClientCloseConnection)){
+			fclose(file);
 			return CLOSING;
+		}
+		
+		fprintf(file ,"%s" , (const char *) buffer);
 		
 		char response[MSG_MAX_SIZE];
 		
 		strcpy(response , "ACK MSG : ");
 		strncat(response , buffer , length);
 		int res_length = strlen("ACK MSG : ") + length;
+		
+		//encrypt
 
 		if(writeInPipe(outputChannel,(byte *) response , res_length) < 0)
 		{
 			fprintf(stderr , "\n **** communication write error **** \n\n");
+			fclose(file);
 			return ERROR;	
 		}
 		

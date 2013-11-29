@@ -85,6 +85,7 @@ int readFromFile(FILE *file, char *string){
 	
 }
 
+
 void printMsg(char *header , char *string , u_int16_t size){	
 	int i ;
 	

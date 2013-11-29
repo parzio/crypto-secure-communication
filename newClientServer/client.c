@@ -39,7 +39,6 @@ int main(int argc, char ** argv){
 		fprintf(stderr , "\n **** authentication succeded **** \n\n");
 	
 	state = keyExchange();
-
 	
 	state = communication();
 

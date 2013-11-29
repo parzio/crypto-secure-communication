@@ -33,16 +33,22 @@ int main(int argc, char ** argv){
 	printHex(msg , 64);
 	
 	*/
-	bit g[1000000];
+	//bit g[1000000];
 	
-	FPRNG(g , 1000000);
+	//FPRNG(g , 1000000);
 	
 	//SPRNG(g , 100000);
 	
 	//printArray(g , 10000);
 	
 	
+	  BIGNUM *n;
+ 
+  int is_p ;
+ 
+  n = BN_new() ;
 	
+	//primeGenerator(NULL , 0);
 	
 
 }

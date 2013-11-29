@@ -1,7 +1,6 @@
 
 #include "FPRNG.h"
 #include "SPRNG.h"
-#include<stdlib.h>
 
 void SPRNG(bit * result , int length){
 	
@@ -64,3 +63,33 @@ void SPRNG(bit * result , int length){
 	
 	printf("num --> %f \n \n " ,(double) n / (double) length);
 }
+
+void primeGenerator(bit * number , int length){
+
+  BIGNUM *n;
+ 
+  int is_p ;
+ 
+  n = BN_new() ;
+/*
+  if (BN_rand( n, 2, 1, 10) == 1) { 
+    printf("n = %s\n", BN_bn2hex(n) ) ; // print as char of hexadecimal character
+    printf("n = %s\n", BN_bn2dec(n) ) ; // print as char of decimal     character
+  }
+	
+	int i = 0;
+	
+	//do{
+		if(BN_is_prime(n,10,NULL, NULL, NULL))
+			printf("prime!!!");
+		else
+			printf("not prime!!!");
+		
+	//}while(i = 0);
+	*/
+
+	
+}
+
+
+

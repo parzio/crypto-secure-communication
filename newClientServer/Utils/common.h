@@ -21,8 +21,6 @@
 #define ClientCloseConnection "Bye"
 #define ServerCloseConnection "ByeClient!"
 
-#define ServerCommunicationFile "serverMSG.txt"
-
 typedef u_int8_t byte;
 
 enum chiperSuite { MAJ5 , ALL5 };
