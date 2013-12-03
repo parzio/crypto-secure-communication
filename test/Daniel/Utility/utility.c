@@ -122,14 +122,16 @@ void inverteArray(bit *array, unsigned int length){
 }
 
 void hexToBinary(bit * array, char * hex){
+
+	/*
+	 * I've changed the hex to bin --> now 0x03 --> [1,1,0,0,0,0,0,0] ---> correct 
+	 */
 	
-	//--> not correct but equal to the one of the prof
-	
-	int i, j , index = strlen(hex) * 4 - 1;
+	int i, j , index = 0;
 		
 	for(i = strlen(hex) - 1; i >= 0; i--)
 	{
-		u_int8_t num;
+		u_int8_t num = 0;
 		
 		switch(hex[i]){
 			case '0' : num = 0;  break;
@@ -148,7 +150,13 @@ void hexToBinary(bit * array, char * hex){
 			case 'D' : num = 13; break;
 			case 'E' : num = 14; break;
 			case 'F' : num = 15; break;
-			default : printf("error hex \n\n"); break;
+			case 'a' : num = 10; break;	
+			case 'b' : num = 11; break;
+			case 'c' : num = 12; break;	
+			case 'd' : num = 13; break;
+			case 'e' : num = 14; break;
+			case 'f' : num = 15; break;
+			default : printf("error hex for char %c \n\n" , hex[i]); break;
  		}
 
 		for(j = 0; j < 4; j++)
@@ -157,26 +165,33 @@ void hexToBinary(bit * array, char * hex){
 				array[index] = 1;
 			else
 				array[index] = 0;
-			index--;
+			index++;
 		}
 	}
 }
 
 void printHex(bit * array, unsigned int length){
 	
-	int ind = length / 4 , num = 0 , i , j;
-
+	int i,j;
+	int num_of_hex = length / 4 + ((length % 4 != 0) ? 1 : 0);	//number of hex that I have to print	
+	unsigned char buffer[num_of_hex];	//buffer
+	memset(buffer , 0 , num_of_hex * sizeof(char));	//init 0
+	
+	for(i = 0; i < num_of_hex; i++)
+	{
+		for(j = 0; j < 4; j++)
+		{
+			int index = (i * 4) + j;
+			if(index < length)
+				buffer[i] |= (array[index] << j);	
+		}
+	}
+	
 	char x;
 	
-	for(i = 0; i < ind; i++)
-	{	
-		for(j = 3; j >= 0; j--)
-		{
-			if(array[i * 4 + j] == 1)
-				num += (1 << (3 - j));
-		}
-
-		switch(num){
+	for(i = num_of_hex - 1; i >= 0 ; i--)
+	{
+		switch(buffer[i]){
 			case 0 : x = '0';  break;
 			case 1 : x = '1';  break;
 			case 2 : x = '2';  break;
@@ -193,15 +208,11 @@ void printHex(bit * array, unsigned int length){
 			case 13 : x = 'D'; break;
 			case 14 : x = 'E'; break;
 			case 15 : x = 'F'; break;
-			default : printf("error hex \n\n"); break;
- 		}
-		
-		printf("%c" , x);
-		
-		num = 0;	
-		
+			default : break;
+ 		}	
+		printf("%c" , x);		
 	}
-	
+
 	printf("\n");
 }
 

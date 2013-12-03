@@ -14,6 +14,8 @@
 #include <openssl/bn.h>
 
 #define MSG_MAX_SIZE	2048
+#define MAX_HEX_KEY_SIZE 256
+
 
 #define ServerOpenConnection 	"HI!"
 #define ClientOpenConnection 	"Hello!"

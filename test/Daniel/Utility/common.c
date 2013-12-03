@@ -85,33 +85,58 @@ int readFromFile(FILE *file, char *string){
 	
 }
 
-int readHexKey(const char * filePath , bit * key){
+void rsaEXP(BIGNUM *message , rsaKey * key){
+
+	BN_CTX * t = BN_CTX_new();
+
+	BN_mod_exp(message , message, key->exponent , key->modulo , t);
 	
+	BN_CTX_free(t);
+
+}
+
+void readRsaKey(const char * filePath , const char * userName , rsaKey * key){
+		
 	FILE *file = fopen(filePath, "rt");
-	
+
 	if(file == NULL){
 		perror(filePath);
 		return -1;
 	}
 	
-	//read the hex strng --> conve
-	
-	char hexKey[MAX_HEX_KEY_SIZE];	//hex key	
-	int read;
-	int length = MAX_HEX_KEY_SIZE;
+	char exponent_string[MAX_HEX_KEY_SIZE] , modulo_string[MAX_HEX_KEY_SIZE];
+	char name[512];
+	int userChar = 0 , exponent_length = 0 , modulo_length = 0;
+	int exit = 0;
+	do{
+		if(userName != NULL)
+			userChar = readFromFile(file , name);
 
-	read = getline(&hexKey , &length, file);
+		name[userChar] = '\0';
+		
+		exponent_length = readFromFile(file , exponent_string);		
+		modulo_length = readFromFile(file , modulo_string);
+
+		if(userName != NULL && strncmp(name , userName , strlen(userName)) == 0)
+		{
+		BN_hex2bn(&key->modulo, modulo_string);
+		BN_hex2bn(&key->exponent, exponent_string);
+		//printf("n = %s\n", BN_bn2hex(key->exponent)); 
+		//printf("n = %s\n", BN_bn2hex(key->modulo));
+		//printf("name = %s\n", userName);	
+		exit = 1;			
+		}
+		else	if(userName == NULL)
+		{
+		BN_hex2bn(&key->modulo, modulo_string);
+		BN_hex2bn(&key->exponent, exponent_string);
+		exit = 1;
+		}
+	}while(exit == 0);
 	
-	if(read == -1){
-		fprintf(stderr , "Error while reading the key : %s \n" , filePath);
-		return -1;
-	}
-	
-	
-	
-	
+	fclose(file);
+
 }
-
 
 void printMsg(char *header , char *string , u_int16_t size){	
 	int i ;

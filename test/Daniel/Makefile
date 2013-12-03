@@ -4,18 +4,21 @@ CFLAGS 		= -Wall -w
 STREAMCHIPER	= $(patsubst %.c, %.o, $(wildcard StreamChiper/*.c))
 UTILITY		= $(patsubst %.c, %.o, $(wildcard Utility/*.c))
 BLOCKCHIPER	= $(patsubst %.c, %.o, $(wildcard BlockChiper/*.c))
-PRNG		= PRNG/FPNRG.o PRNG/SPRNG.o
+PRNG		= $(patsubst %.c, %.o, $(wildcard PRNG/*.c))
+SERVER_OBJS=server.o
+CLIENT_OBJS=client.o
 
+all: server client 
 
-all: $(STREAMCHIPER) $(UTILITY) $(BLOCKCHIPER) $(PRNG) $(TESTER) 
-	$(CC) $(CFLAGS) -o test $(STREAMCHIPER) $(UTILITY) $(BLOCKCHIPER) $(PRNG) $(TESTER) -lssl -lcrypto 
+client: $(CLIENT_OBJS) $(STREAMCHIPER) $(UTILITY) $(BLOCKCHIPER) $(PRNG)
+	$(CC) $(CFLAGS) $(CLIENT_OBJS) -o $@ $(STREAMCHIPER) $(UTILITY) $(BLOCKCHIPER) $(PRNG) -lcrypto
 
-PRNG/SPRNG.o: PRNG/SPRNG.c 
-	$(CC) $(CFLAGS) -c PRNG/SPRNG.c -lssl -lcrypto
+server: $(SERVER_OBJS) $(STREAMCHIPER) $(UTILITY) $(BLOCKCHIPER) $(PRNG)
+	$(CC) $(CFLAGS) $(SERVER_OBJS) -o $@ $(STREAMCHIPER) $(UTILITY) $(BLOCKCHIPER) $(PRNG) -lcrypto
 	
-PRNG/FPRNG.o: PRNG/FPRNG.c
-	$(CC) $(CFLAGS) -c PRNG/FPRNG.c 
-
+ss: $(STREAMCHIPER) $(UTILITY) $(BLOCKCHIPER) $(PRNG) $(TESTER) server client
+	$(CC) $(CFLAGS) -o test $(STREAMCHIPER) $(UTILITY) $(BLOCKCHIPER) $(PRNG) $(TESTER) -lcrypto
+	
 clean:
-	rm -f *.o test $(STREAMCHIPER) $(UTILITY) $(BLOCKCHIPER) $(PRNG)
+	rm -f *.o test $(STREAMCHIPER) $(UTILITY) $(BLOCKCHIPER) $(PRNG) $(SERVER_OBJS) $(CLIENT_OBJS) server client
 	
