@@ -12,16 +12,21 @@ int encrypt_and_send(byte * msg , const int length){
 		return 0;
 	}
 	
-	if(encType == RSA512)
-	{
-		BIGNUM *message = BN_new();			
-		message = BN_bin2bn((const unsigned char *) msg, RSA512_BYTE_LENGTH , NULL);
+	if(encType == RSA512){
+		BIGNUM *message = BN_new();	
+
+		byte fullMsg[RSA512_BYTE_LENGTH];
+		
+		memset(fullMsg , 0 , sizeof(byte) * RSA512_BYTE_LENGTH);
+		memcpy(fullMsg , msg , sizeof(byte) * length);
+		
+		message = BN_bin2bn((const unsigned char *) fullMsg, RSA512_BYTE_LENGTH , NULL);
 		
 		rsaEXP(message , &server512Rsa);	//Encrypt with server RSA public key
 		
-		BN_bn2bin(message , msg);
+		BN_bn2bin(message , fullMsg);
 
-		if(writeInPipe(outputChannel, (byte *) msg , RSA512_BYTE_LENGTH) < 0)
+		if(writeInPipe(outputChannel, (byte *) fullMsg , RSA512_BYTE_LENGTH) < 0)
 		{
 			fprintf(stderr , " **** Communication phase write error **** \n\n");
 			return -1;	
@@ -31,16 +36,21 @@ int encrypt_and_send(byte * msg , const int length){
 		return 0;
 	}
 	
-	if(encType == RSA64)
-	{
-		BIGNUM *message = BN_new();			
-		message = BN_bin2bn((const unsigned char *) msg, RSA64_BYTE_LENGTH , NULL);
+	if(encType == RSA64){
+		BIGNUM *message = BN_new();	
+
+		byte fullMsg[RSA64_BYTE_LENGTH];
+		
+		memset(fullMsg , 0 , sizeof(byte) * RSA64_BYTE_LENGTH);
+		memcpy(fullMsg , msg , sizeof(byte) * length);
+		
+		message = BN_bin2bn((const unsigned char *) fullMsg, RSA64_BYTE_LENGTH , NULL);
 		
 		rsaEXP(message , &server64Rsa);	//Encrypt with server RSA public key
 				
-		BN_bn2bin(message , msg);
+		BN_bn2bin(message , fullMsg);
 
-		if(writeInPipe(outputChannel, (byte *) msg , RSA64_BYTE_LENGTH) < 0)
+		if(writeInPipe(outputChannel, (byte *) fullMsg , RSA64_BYTE_LENGTH) < 0)
 		{
 			fprintf(stderr , " **** Communication phase write error **** \n\n");
 			return -1;	
@@ -51,8 +61,7 @@ int encrypt_and_send(byte * msg , const int length){
 		return 0;
 	}
 	
-	if(encType == Cipher_Bunny24)
-	{
+	if(encType == Cipher_Bunny24){
 		BIGNUM *tm = BN_new();	
 
 		int message_bit_length = length * 8;	//bit		
@@ -88,15 +97,24 @@ int encrypt_and_send(byte * msg , const int length){
 		return 0;
 	}
 	
-	if(encType == Cipher_ALL5)
-	{
+	if(encType == Cipher_ALL5){
 		BIGNUM *tm = BN_new();	
 
 		byte ciphertext[length];
 		
 		ALL5_encrypt(&cipherStruct.all5, msg, ciphertext, length);
 		
-		if(writeInPipe(outputChannel, (byte *) ciphertext , length) < 0)
+		int send_length = length;
+		byte fullMsg[length + HASH_BYTE_LENGTH];	//message + hash
+		memcpy(fullMsg , ciphertext , sizeof(byte) * length);
+		
+		if(cipherSpec.hash_function == hash_spongeBunny)
+		{		
+		send_length += HASH_BYTE_LENGTH;
+		computeAndAddHash(ciphertext, fullMsg, length);
+		}
+		
+		if(writeInPipe(outputChannel, (byte *) ciphertext , send_length) < 0)
 		{
 			fprintf(stderr , " **** Communication phase write error **** \n\n");
 			return -1;	
@@ -116,13 +134,23 @@ int encrypt_and_send(byte * msg , const int length){
 		
 		MAJ5_encrypt(&cipherStruct.maj5, msg, ciphertext, length);
 		
-		if(writeInPipe(outputChannel, (byte *) ciphertext , length) < 0)
+		int send_length = length;
+		byte fullMsg[length + HASH_BYTE_LENGTH];	//message + hash
+		memcpy(fullMsg , ciphertext , sizeof(byte) * length);
+		
+		if(cipherSpec.hash_function == hash_spongeBunny)
+		{		
+		send_length += HASH_BYTE_LENGTH;
+		computeAndAddHash(ciphertext, fullMsg, length);
+		}
+		
+		if(writeInPipe(outputChannel, (byte *) fullMsg , send_length) < 0)
 		{
 			fprintf(stderr , " **** Communication phase write error **** \n\n");
 			return -1;	
 		}
 		
-		tm = BN_bin2bn((const unsigned char *) ciphertext, length , NULL);
+		tm = BN_bin2bn((const unsigned char *) fullMsg, send_length , NULL);
 		printf("MAJ5 cipher : %s\n", BN_bn2hex(tm));
 		BN_free(tm);			
 	}
@@ -142,8 +170,9 @@ int receive_and_decrypt(byte * msg){
 		return length;
 
 	if(encType == RSA64){
-		BIGNUM *message = BN_new();	
-		message = BN_bin2bn((const unsigned char *) msg, RSA64_BYTE_LENGTH , NULL);
+		BIGNUM *message = BN_new();
+
+		message = BN_bin2bn((const unsigned char *) msg, length , NULL);
 		
 		printf("RSA64 : %s\n", BN_bn2hex(message));
 		
@@ -157,7 +186,7 @@ int receive_and_decrypt(byte * msg){
 	
 	if(encType == RSA512){
 		BIGNUM *message = BN_new();	
-		message = BN_bin2bn((const unsigned char *) msg, RSA512_BYTE_LENGTH , NULL);
+		message = BN_bin2bn((const unsigned char *) msg, length , NULL);
 		
 		printf("RSA512 : %s\n", BN_bn2hex(message));
 		
@@ -173,10 +202,19 @@ int receive_and_decrypt(byte * msg){
 		BIGNUM *tm = BN_new();	
 		tm = BN_bin2bn((const unsigned char *) msg, length , NULL);
 		printf("%s\n", BN_bn2hex(tm));
-	
-		byte plaintext[length];
+		
+		byte plaintext[length - HASH_BYTE_LENGTH];
+		byte fullMsg[length - HASH_BYTE_LENGTH];
+		
+		if(cipherSpec.hash_function == hash_spongeBunny)
+		{
+			length = computeAndCheckHash(msg , fullMsg , length);	
+			
+			if(length == -1)
+				fprintf(stderr , "Wrong HASH !!!!!!! \n");
+		}
 
-		ALL5_decrypt(&cipherStruct.all5, plaintext, msg, length);
+		ALL5_decrypt(&cipherStruct.all5, plaintext, fullMsg, length);
 		BN_free(tm);	
 		
 		memcpy(msg , plaintext , sizeof(byte) * length);		
@@ -188,10 +226,19 @@ int receive_and_decrypt(byte * msg){
 		tm = BN_bin2bn((const unsigned char *) msg, length , NULL);
 		printf("%s\n", BN_bn2hex(tm));
 	
-		byte plaintext[length];
-
-		MAJ5_decrypt(&cipherStruct.maj5, plaintext, msg, length);
-		BN_free(tm);	
+		byte plaintext[length - HASH_BYTE_LENGTH];
+		byte fullMsg[length - HASH_BYTE_LENGTH];
+		
+		if(cipherSpec.hash_function == hash_spongeBunny)
+		{
+			length = computeAndCheckHash(msg , fullMsg , length);	
+			
+			if(length == -1)
+				fprintf(stderr , "Wrong HASH !!!!!!! \n");
+		}
+		
+		MAJ5_decrypt(&cipherStruct.maj5, plaintext, fullMsg, length);
+		BN_free(tm);		
 		
 		memcpy(msg , plaintext , sizeof(byte) * length);		
 		return length;		
@@ -458,7 +505,7 @@ clientState keyExchange(){
 					 break;
 					 
 		case 'B': cipherSpec.symmetric_cipher = Cipher_Bunny24; 
-					 cipherSpec.public_cipher = RSA64;
+					 cipherSpec.public_cipher = RSA512;
 					 cipherSpec.hash_function = hash_spongeBunny;
 					 break;
 					 
@@ -468,7 +515,7 @@ clientState keyExchange(){
 					 break;
 					 
 		case 'D': cipherSpec.symmetric_cipher = Cipher_ALL5; 
-					 cipherSpec.public_cipher = RSA64;
+					 cipherSpec.public_cipher = RSA512;
 					 cipherSpec.hash_function = hash_spongeBunny;
 					 break;
 					 
@@ -478,7 +525,7 @@ clientState keyExchange(){
 					 break;
 					 
 		case 'F': cipherSpec.symmetric_cipher = Cipher_MAJ5; 
-					 cipherSpec.public_cipher = RSA64;
+					 cipherSpec.public_cipher = RSA512;
 					 cipherSpec.hash_function = hash_spongeBunny;
 					 break;
 					 

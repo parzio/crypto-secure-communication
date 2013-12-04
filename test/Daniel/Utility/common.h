@@ -3,6 +3,7 @@
 
 #include "../StreamChiper/streamChiper.h"
 #include "../BlockChiper/cbcMode.h"
+#include "../BlockChiper/SpongeBunny.h"
 #include "../PRNG/PRNG.h"
 
 #include <sys/types.h>
@@ -16,6 +17,7 @@
 
 #define MSG_MAX_SIZE	2048	//bits
 #define MAX_HEX_KEY_SIZE 256	//char
+
 #define RSA512_BIT_LENGTH			512	//bits
 #define RSA512_BYTE_LENGTH			RSA512_BIT_LENGTH / 8
 #define RSA64_BIT_LENGTH			64
@@ -74,6 +76,13 @@ void cipherInit(cipher_struct * cipher , const bit * key ,
 					 const EncType encType);
 
 void cipherDelete(cipher_struct * cipher ,const EncType encType);
+
+int computeAndAddHash(byte * msg , byte * fullMsg , int length); //msg --> original , fullMsg --> msg + hash, length = length of msg
+//return length + hash_length
+
+int computeAndCheckHash(byte * msg , byte * fullMsg , int length);//msg --> original , fullMsg --> msg - hash, length = length of msg
+//return length - hash_length , -1 if wrong
+
 
 
 #endif

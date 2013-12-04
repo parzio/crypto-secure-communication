@@ -9,6 +9,7 @@
 #include <string.h>
 
 typedef u_int8_t bit;
+typedef u_int8_t byte;
 
 void arraySum(bit *pA , bit *pB , bit *result, unsigned int degree);
 void arrayMul(bit *pA , bit *pB , bit *field, bit *result, unsigned int degree); //degree is the length of the array == degree of the polynomial

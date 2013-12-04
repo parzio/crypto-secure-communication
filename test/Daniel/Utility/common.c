@@ -254,3 +254,39 @@ void cipherDelete(cipher_struct * cipher, const EncType encType){
 		free(cipher->vector);
 }
 
+int computeAndAddHash(byte * msg , byte * fullMsg , int length){
+	
+	byte hash[HASH_BYTE_LENGTH];
+		
+	spongeBunnyComputeHash(msg , hash , length);
+	
+	int i, z = 0;
+	
+	for(i = length; i < (length + HASH_BYTE_LENGTH) ; i++)
+		fullMsg[i] = hash[z++];
+	
+	return length + HASH_BYTE_LENGTH;
+}
+
+int computeAndCheckHash(byte * msg , byte * fullMsg , int length){
+	
+	byte hash[HASH_BYTE_LENGTH];
+	
+	memcpy(fullMsg , msg , sizeof(byte) * (length - HASH_BYTE_LENGTH));
+	
+	spongeBunnyComputeHash(fullMsg , hash , length - HASH_BYTE_LENGTH);
+	
+	int i, z = 0;
+	
+	for(i = length - HASH_BYTE_LENGTH; i < length ; i++)
+		if(msg[i] != hash[z++])
+			return -1;
+		
+	BIGNUM *tm = BN_new();	
+	tm = BN_bin2bn((const unsigned char *) hash, HASH_BYTE_LENGTH , NULL);
+	printf("HASH : %s\n", BN_bn2hex(tm));
+	BN_free(tm);
+		
+	return length - HASH_BYTE_LENGTH;
+	
+}
