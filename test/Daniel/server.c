@@ -13,12 +13,11 @@ int encrypt_and_send(byte * msg , const int length){
 		return 0;
 	}
 	
-	if(encType == RSA512)
-	{
+	if(encType == RSA512){
 		BIGNUM *message = BN_new();			
 		message = BN_bin2bn((const unsigned char *) msg, RSA512_BYTE_LENGTH , NULL);
 		
-		rsaEXP(message , &clientRsa);	//Encrypt with server RSA public key
+		rsaEXP(message , &client512Rsa);	//Encrypt with server RSA public key
 		
 		BN_bn2bin(message , msg);
 
@@ -28,17 +27,16 @@ int encrypt_and_send(byte * msg , const int length){
 			return -1;	
 		}
 		
-		printf("%s\n", BN_bn2hex(message));
+		printf("RSA512 : %s\n", BN_bn2hex(message));
 		BN_free(message);		
 		return 0;
 	}
 	
-	if(encType == RSA64)
-	{
+	if(encType == RSA64){
 		BIGNUM *message = BN_new();			
 		message = BN_bin2bn((const unsigned char *) msg, RSA64_BYTE_LENGTH , NULL);
 		
-		rsaEXP(message , &clientRsa);	//Encrypt with server RSA public key
+		rsaEXP(message , &client64Rsa);	//Encrypt with server RSA public key
 				
 		BN_bn2bin(message , msg);
 
@@ -48,7 +46,7 @@ int encrypt_and_send(byte * msg , const int length){
 			return -1;	
 		}
 		
-		printf("%s\n", BN_bn2hex(message));
+		printf("RSA64 : %s\n", BN_bn2hex(message));
 		BN_free(message);		
 		return 0;
 	}
@@ -58,24 +56,26 @@ int encrypt_and_send(byte * msg , const int length){
 int receive_and_decrypt(byte * msg){
 
 	int length = readFromPipe(inputChannel , msg); 
-	
+
 	if(length < 0)
 	{
 		fprintf(stderr , " **** error reading message **** \n\n");
 		return -1;
 	}	
+
+	if(strncmp(msg , ClientCloseConnection , length) == 0 && length == strlen(ClientCloseConnection))
+		return length;
 	
 	if(encType == PLAIN)
 		return length;
 
-	if(encType == RSA64)
-	{
+	if(encType == RSA64){
 		BIGNUM *message = BN_new();	
 		message = BN_bin2bn((const unsigned char *) msg, RSA64_BYTE_LENGTH , NULL);
 		
 		printf("%s\n", BN_bn2hex(message));
 		
-		rsaEXP(message , &serverRsa);	//Decrypt with private keyExchange
+		rsaEXP(message , &server64Rsa);	//Decrypt with private keyExchange
 		
 		BN_bn2bin(message , msg);
 
@@ -83,40 +83,87 @@ int receive_and_decrypt(byte * msg){
 		return length;		
 	}
 	
-	if(encType == RSA512)
-	{
+	if(encType == RSA512){
 		BIGNUM *message = BN_new();	
 		message = BN_bin2bn((const unsigned char *) msg, RSA512_BYTE_LENGTH , NULL);
 		
 		printf("%s\n", BN_bn2hex(message));
 		
-		rsaEXP(message , &serverRsa);	//Decrypt with private keyExchange
+		rsaEXP(message , &server512Rsa);	//Decrypt with private keyExchange
 
 		BN_bn2bin(message , msg);
 
 		BN_free(message);		
 		return length;		
 	}
+	
+	if(encType == Cipher_ALL5){
+		BIGNUM *tm = BN_new();	
+		tm = BN_bin2bn((const unsigned char *) msg, length , NULL);
+		printf("%s\n", BN_bn2hex(tm));
+	
+		byte plaintext[length];
 
+		ALL5_decrypt(&cipherStruct.all5, plaintext, msg, length);
+		BN_free(tm);	
+		
+		memcpy(msg , plaintext , sizeof(byte) * length);		
+		return length;		
+	}
+	
+	if(encType == Cipher_MAJ5){
+		BIGNUM *tm = BN_new();	
+		tm = BN_bin2bn((const unsigned char *) msg, length , NULL);
+		printf("%s\n", BN_bn2hex(tm));
+	
+		byte plaintext[length];
+
+		MAJ5_decrypt(&cipherStruct.maj5, plaintext, msg, length);
+		BN_free(tm);	
+		
+		memcpy(msg , plaintext , sizeof(byte) * length);		
+		return length;		
+	}
+
+	
 }
 
 int loadServerRsaKey(){	
-	serverRsa.modulo = BN_new();
-	serverRsa.exponent = BN_new();	
-	readRsaKey(ServerRsa512PrivateKeyFile , NULL , &serverRsa);
+
+	server512Rsa.modulo 	 = BN_new();
+	server512Rsa.exponent = BN_new();
+	
+	server64Rsa.modulo = BN_new();
+	server64Rsa.exponent = BN_new();
+	
+	readRsaKey(ServerRsa512PrivateKeyFile , NULL , &server512Rsa);
+
+	readRsaKey(ServerRsa64PrivateKeyFile , NULL , &server64Rsa);
+
 }
 
 int loadClientRsaKey(const char * clientName){
-	clientRsa.modulo = BN_new();
-	clientRsa.exponent = BN_new();	
-	readRsaKey(ClientRsa64PublicKeyFile , clientName , &clientRsa); 	//obtain key
+
+	client512Rsa.modulo = BN_new();
+	client512Rsa.exponent = BN_new();
+	
+	client64Rsa.modulo = BN_new();
+	client64Rsa.exponent = BN_new();
+
+	readRsaKey(ClientRsa64PublicKeyFile , clientName , &client64Rsa); 	
+
+	readRsaKey(ClientRsa512PublicKeyFile , clientName , &client512Rsa); 
 }
 
 void clearRsaKey(){
-	BN_free(serverRsa.modulo);
-	BN_free(serverRsa.exponent);
-	BN_free(clientRsa.modulo);
-	BN_free(clientRsa.exponent);
+	BN_free(server512Rsa.modulo);
+	BN_free(server512Rsa.exponent);
+	BN_free(client64Rsa.modulo);
+	BN_free(client64Rsa.exponent);
+	BN_free(server64Rsa.modulo);
+	BN_free(server64Rsa.exponent);
+	BN_free(client512Rsa.modulo);
+	BN_free(client512Rsa.exponent);
 }
 
 int openFifo(const char * pathname){
@@ -236,21 +283,17 @@ serverState authentication(){
 	message = BN_bin2bn((const unsigned char *) msg64, RSA64_BYTE_LENGTH , NULL);		
 	printf("%s\n", BN_bn2hex(message));
 	
-	fprintf(stderr , "\n< Client plain challenge, server authentication > \n");		
+	fprintf(stderr , "\n< Server plain challenge, client authentication > \n");		
 	printf("%s\n", BN_bn2hex(original));
 	
-	int equal = BN_cmp(message , original);
-	
-	BN_free(clientRsa.modulo);
-	BN_free(clientRsa.exponent);
-	BN_free(message);
-	BN_free(original);
-	
-	if(equal != 0)
+	if(BN_cmp(original , message) != 0)
 	{
 		fprintf(stderr , "\n **** challenge Message error **** \n\n");	
-		return ERROR;
+		return CLOSING;
 	}
+	
+	BN_free(message);
+	BN_free(original);
 	
 	fprintf(stderr , "\n **** Authentication phase completed **** \n\n");
 	
@@ -260,76 +303,137 @@ serverState authentication(){
 
 serverState keyExchange(){
 	
+	encType = PLAIN;
+	
+	fprintf(stderr , " **** Key Exhange phase **** \n\n");
+	
+	char cChiper[1];
+	
+	fprintf(stderr , "\n< Client cipher spec , client key exchange >\n");
+	receive_and_decrypt(cChiper);
+	fprintf(stderr , " %c \n" , cChiper[0]);
+	
+	if(isInCipherSpec(ServerCipherSpecFile , cChiper) == -1)	//if i have the cipher
+	{
+		fprintf(stderr , "\n< No cipher %c >\n" , cChiper[0]);
+		return ERROR;
+	}
+	
+	fprintf(stderr , "\n< Client cipher accepted , key generation >\n");	
+	switch(cChiper[0]){
+		
+		case 'A': cipherSpec.symmetric_cipher = Cipher_Bunny24; 
+					 cipherSpec.public_cipher = RSA64;
+					 cipherSpec.hash_function = hash_spongeBunny;
+					 break;
+					 
+		case 'B': cipherSpec.symmetric_cipher = Cipher_Bunny24; 
+					 cipherSpec.public_cipher = RSA64;
+					 cipherSpec.hash_function = hash_spongeBunny;
+					 break;
+					 
+		case 'C': cipherSpec.symmetric_cipher = Cipher_ALL5; 
+					 cipherSpec.public_cipher = RSA64;
+					 cipherSpec.hash_function = hash_spongeBunny;
+					 break;
+					 
+		case 'D': cipherSpec.symmetric_cipher = Cipher_ALL5; 
+					 cipherSpec.public_cipher = RSA64;
+					 cipherSpec.hash_function = hash_spongeBunny;
+					 break;
+					 
+		case 'E': cipherSpec.symmetric_cipher = Cipher_MAJ5; 
+					 cipherSpec.public_cipher = RSA64;
+					 cipherSpec.hash_function = hash_spongeBunny;
+					 break;
+					 
+		case 'F': cipherSpec.symmetric_cipher = Cipher_MAJ5; 
+					 cipherSpec.public_cipher = RSA64;
+					 cipherSpec.hash_function = hash_spongeBunny;
+					 break;
+					 
+		default : break;
+	}
+	
+	bit buffer24[24] , buffer64[64];
+	byte key24[3] , key64[8];
+	
+	memset(key24 , 0 , sizeof(byte) * 3);
+	memset(key64 , 0 , sizeof(byte) * 8);
+	
+	int i;
+	BIGNUM *tm;
+	tm = BN_new();
+	
+	encType = cipherSpec.public_cipher;
+	
+	if(cipherSpec.symmetric_cipher == Cipher_Bunny24)
+	{
+		FPRNG(buffer24 , 24);
+		for(i = 0; i < 24; i++)
+			key24[i/8] |= (buffer24[i] << (i % 8));		//to byte
+			
+		tm = BN_bin2bn((const unsigned char *) key64, 8 , NULL);	
+		printf("PLAIN : %s\n", BN_bn2hex(tm));	
+		encrypt_and_send(key24 , 3);
+		cipherInit(&cipherStruct , buffer24 , 24 , init_vector , 24, Cipher_Bunny24);
+	}
+	else
+	{
+		FPRNG(buffer64 , 64);
+		for(i = 0; i < 64; i++)
+			key64[i/8] |= (buffer64[i] << (i % 8));		//to byte		
+			
+		tm = BN_bin2bn((const unsigned char *) key64, 8 , NULL);	
+		printf("PLAIN  : %s\n", BN_bn2hex(tm));	
+		encrypt_and_send(key64 , 8);	
+		cipherInit(&cipherStruct , buffer64 , 64 , init_vector , 24, cipherSpec.symmetric_cipher);
+	}
+	
+	BN_free(tm);
+
+	fprintf(stderr , "\n **** Key Exhange completed **** \n\n");
+	
 	return COMMUNICATION;
 	
 }
 
 serverState communication(){	
 	
-	char buffer[MSG_MAX_SIZE];
+	char msg[MSG_MAX_SIZE];
 	
 	int length = 0;
+
+	do{
+
+	encType = cipherSpec.symmetric_cipher;	
+		
+	fprintf(stderr , "\n< Client message , communication > \n");			
+	length = receive_and_decrypt(msg);	
+
+	if(strncmp(msg , ClientCloseConnection , length) == 0 && length == strlen(ClientCloseConnection)){
+		fprintf(stderr , "%s" , ClientCloseConnection);
+		encType = PLAIN;
+		return CLOSING;
+	}
+	encType = PLAIN;
+		
+	fprintf(stderr , "\n< Server response , communication >\n" );			
+	encrypt_and_send(msg , length);	
+	printMsg("" , msg ,(u_int16_t) length);
 	
-		FILE *file = fopen(ServerCommunicationFile, "w+");
-	
-		if(file == NULL){
-			perror("Server txt file ");
-			return ERROR;
-		}
-
-		do{
-			
-		length = readFromPipe(inputChannel ,(byte *) buffer);
-		
-		if(length == -1)
-		{
-			fclose(file);
-			return ERROR;
-		}
-		
-		//decrypt
-		
-		printMsg("Client to server ---> " , buffer , length);
-
-		if(strncmp(buffer , ClientCloseConnection , length) == 0 && length == strlen(ClientCloseConnection)){
-			fclose(file);
-			return CLOSING;
-		}
-		
-		fprintf(file ,"%s" , (const char *) buffer);
-		
-		char response[MSG_MAX_SIZE];
-		
-		strcpy(response , "ACK MSG : ");
-		strncat(response , buffer , length);
-		int res_length = strlen("ACK MSG : ") + length;
-		
-		//encrypt
-
-		if(writeInPipe(outputChannel,(byte *) response , res_length) < 0)
-		{
-			fprintf(stderr , "\n **** communication write error **** \n\n");
-			fclose(file);
-			return ERROR;	
-		}
-		
-		printMsg("Server to client ---> " , response , res_length);	
-		fprintf(stderr , "\n");
-			
-		}while(1);
+	}while(1);
 		
 }
 
 serverState closeConnection(){
 	
-	if(writeInPipe(outputChannel,(byte *) ServerCloseConnection , strlen(ServerCloseConnection)) < 0)
-	{
-		fprintf(stderr , "\n **** closing falied **** \n\n");
-		return ERROR;	
-	}
+	encType = PLAIN;
 	
-	printMsg("Server to client ---> " , ServerOpenConnection , strlen(ServerOpenConnection));
-					
+	fprintf(stderr , "\n< Server response , closing >\n" );	
+	encrypt_and_send(ServerCloseConnection , strlen(ServerCloseConnection));
+	fprintf(stderr , "%s" , ServerCloseConnection);
+
 	return WAITING;
 	
 }

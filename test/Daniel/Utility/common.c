@@ -95,6 +95,67 @@ void rsaEXP(BIGNUM *message , rsaKey * key){
 
 }
 
+int isInCipherSpec(const char * filePath, const char * cipherSpec){
+	FILE *file = fopen(filePath, "rt");
+
+	if(file == NULL){
+		perror(filePath);
+		return -1;
+	}
+	
+	char cipherss[20];
+	int exit = 0;
+	
+	do{
+		int read = readFromFile(file , cipherss);
+		
+		if(read <= 0)
+			return - 1;
+
+		if(cipherss[0] == cipherSpec[0])
+			return 1;
+		
+	}while(exit == 0);
+	
+	fclose(file);	
+	
+}
+
+void raedCipherSpec(const char * filePath, const char * userName , char * cipherSpec){
+	
+	FILE *file = fopen(filePath, "rt");
+
+	if(file == NULL || userName == NULL){
+		perror(filePath);
+		return -1;
+	}
+	
+	char name[512];
+	char cipherss[20];
+	int userChar;
+	int exit = 0;
+	
+	do{
+		userChar = readFromFile(file , name);
+		readFromFile(file , cipherss);
+		
+		if(userChar <= 0)
+			return;
+		
+		name[userChar] = '\0';
+
+		if(strncmp(name , userName , strlen(userName)) == 0)
+		{
+		cipherSpec[0] = cipherss[0];
+		exit = 1;			
+		}
+		
+	}while(exit == 0);
+	
+	fclose(file);	
+	
+}
+
 void readRsaKey(const char * filePath , const char * userName , rsaKey * key){
 		
 	FILE *file = fopen(filePath, "rt");
@@ -106,7 +167,7 @@ void readRsaKey(const char * filePath , const char * userName , rsaKey * key){
 	
 	char exponent_string[MAX_HEX_KEY_SIZE] , modulo_string[MAX_HEX_KEY_SIZE];
 	char name[512];
-	int userChar = 0 , exponent_length = 0 , modulo_length = 0;
+	int userChar = 10 , exponent_length = 0 , modulo_length = 0;
 	int exit = 0;
 	do{
 		if(userName != NULL)
@@ -117,13 +178,13 @@ void readRsaKey(const char * filePath , const char * userName , rsaKey * key){
 		exponent_length = readFromFile(file , exponent_string);		
 		modulo_length = readFromFile(file , modulo_string);
 
+		if(modulo_length <= 0 || exponent_length <= 0 || userChar <= 0)
+			return;
+		
 		if(userName != NULL && strncmp(name , userName , strlen(userName)) == 0)
 		{
 		BN_hex2bn(&key->modulo, modulo_string);
 		BN_hex2bn(&key->exponent, exponent_string);
-		//printf("n = %s\n", BN_bn2hex(key->exponent)); 
-		//printf("n = %s\n", BN_bn2hex(key->modulo));
-		//printf("name = %s\n", userName);	
 		exit = 1;			
 		}
 		else	if(userName == NULL)
@@ -141,13 +202,55 @@ void readRsaKey(const char * filePath , const char * userName , rsaKey * key){
 void printMsg(char *header , char *string , u_int16_t size){	
 	int i ;
 	
-	fprintf(stderr , "%s ' " , header);
+	fprintf(stderr , "%s" , header);
 	
 	for(i = 0; i < size ; i++)
 		if(string[i] != '\n')
 			fprintf(stderr , "%c" , string[i]);
 	
-	fprintf(stderr , " ' of length %d \n" , size);
+	fprintf(stderr , "\n");
 
+}
+
+void cipherInit(cipher_struct * cipher , const bit * key , const int keyLength , const bit * initVector , const int vectorLength, const EncType encType){
+	cipher->keyLength 	= keyLength;
+	cipher->vectorLength = vectorLength;
+	
+	cipher->key  = malloc(keyLength * sizeof(bit));	//register
+	cipher->vector  = malloc(vectorLength * sizeof(bit));	//register
+	
+	memcpy(cipher->key , key , sizeof(bit) * keyLength);
+	memcpy(cipher->vector , initVector , sizeof(bit) * vectorLength);
+	
+	if(encType == Cipher_MAJ5)
+	{
+		MAJ5_init(&cipher->maj5);
+		MAJ5_keyLoading(&cipher->maj5 , key , initVector);
+		MAJ5_warmUpStream(&cipher->maj5 , 100);
+		return;
+	}
+	
+	if(encType == Cipher_ALL5)
+	{
+		ALL5_init(&cipher->all5);
+		ALL5_keyLoading(&cipher->all5 , key , initVector);
+		ALL5_warmUpStream(&cipher->all5 , 100);	
+		return;
+	}
+}
+
+void cipherDelete(cipher_struct * cipher, const EncType encType){
+	
+	if(encType == Cipher_MAJ5)
+		MAJ5_delete(&cipher->maj5);
+
+	if(encType == Cipher_ALL5)
+		ALL5_delete(&cipher->all5);
+
+	if(cipher->key != NULL)
+		free(cipher->key);
+	
+	if(cipher->vector != NULL)
+		free(cipher->vector);
 }
 

@@ -5,8 +5,14 @@
 
 #define ClientCommunicationFile 		"client_folder/clientMSG.txt"
 #define ClientRsa512PublicKeyFile	"client_folder/client_rsa512_public_key.txt"	
-#define ClientRsa64PrivateKeyFile	"client_folder/client_rsa64_private_key.txt"	
+
+#define ClientRsa64PrivateKeyFile	"client_folder/client_rsa64_private_key.txt"
+#define ClientRsa512PrivateKeyFile	"client_folder/client_rsa512_private_key.txt"
+
 #define ServerRsa512PublicKeyFile	"client_folder/server_rsa512_public_key.txt"
+#define ServerRsa64PublicKeyFile		"client_folder/server_rsa64_public_key.txt"
+
+#define ClientCipherSpecFile			"client_folder/client_cipher_suits.txt"
 
 typedef enum clientState {
 	HANDSHAKE , 		//Handshake completed, authenication
@@ -19,8 +25,10 @@ typedef enum clientState {
 char clientName[256];
 int inputChannel , outputChannel;
 EncType encType;
+cipher_spec cipherSpec;
+cipher_struct cipherStruct;
 clientState state;
-rsaKey serverRsa, clientRsa;
+rsaKey server512Rsa, server64Rsa , client512Rsa , client64Rsa;
 
 int  loadRsaKey();
 void clearRsaKey();

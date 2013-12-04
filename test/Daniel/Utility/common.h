@@ -29,27 +29,38 @@
 
 #define totalUser			2
 
+static bit init_vector[24] = {0 , 1 , 0 , 1 , 0 , 1 , 0 , 1, 0 , 1 , 0 , 1 , 0 , 1 , 0 , 1 , 0 , 1 , 0 , 1, 0 , 1 , 0 , 1};
 
 typedef struct RSAKEY {
 	BIGNUM *exponent;
 	BIGNUM *modulo;
 } rsaKey;
 
-typedef enum chiper_type {
-	RSA64,
-	RSA512,
-	BUNNY24CBC,
-	MAJ5,
-	ALL5,
-	PLAIN
-} EncType;
+typedef enum { Cipher_Bunny24 = 1 , Cipher_MAJ5 = 3, Cipher_ALL5 = 2, hash_spongeBunny = 4 , RSA64 = 5 , RSA512 = 6 , PLAIN = 7} EncType;
 
-int 	readFromPipe(const int in , byte *msg);
-int 	writeInPipe(const int out, const byte *msg, u_int16_t size);
+typedef struct C_SPEC{
+	EncType symmetric_cipher;
+	EncType public_cipher;
+	EncType hash_function;
+} cipher_spec;
+
+typedef struct cc_ss {	
+	ALL5 all5;
+	MAJ5 maj5;		
+	bit * key;
+	bit * vector;
+	unsigned int vectorLength;
+	unsigned int keyLength;
+} cipher_struct;
+
+int readFromPipe(const int in , byte *msg);
+int writeInPipe(const int out, const byte *msg, u_int16_t size);
 
 int 	readFromFile(FILE *file, char *string);
 
 void readRsaKey(const char * filePath , const char * unserName , rsaKey  * key); //userName used by server
+void raedCipherSpec(const char * filePath, const char * userName , char * cipherSpec);
+int isInCipherSpec(const char * filePath, const char * cipherSpec);
 
 void rsaEXP(BIGNUM *message , rsaKey * key);	//exponent
 
@@ -57,5 +68,12 @@ void 	printMsg(char *header , char *string , u_int16_t size);
 
 int	openChannel(const char *path);
 void 	closeChannel(int channel);
+
+void cipherInit(cipher_struct * cipher , const bit * key , 
+					 const int keyLength , const bit * initVector , const int vectorLength,
+					 const EncType encType);
+
+void cipherDelete(cipher_struct * cipher ,const EncType encType);
+
 
 #endif

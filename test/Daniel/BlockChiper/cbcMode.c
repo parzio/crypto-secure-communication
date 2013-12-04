@@ -3,6 +3,9 @@
 
 int getCipherLength(int length){
 	
+	if(length % block_length == 0)
+		return length;
+	
 	return (length / block_length + 1) * block_length; 
 		
 }

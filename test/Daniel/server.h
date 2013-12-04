@@ -4,9 +4,15 @@
 #include "Utility/common.h"
 
 #define ServerCommunicationFile 		"server_folder/clientMSG.txt"
-#define ClientRsa64PublicKeyFile	"server_folder/client_rsa64_public_key.txt"	
-#define ServerRsa512PrivateKeyFile	"server_folder/server_rsa512_private_key.txt"	
-#define ServerRsa512PublicKeyFile	"server_folder/server_rsa512_public_key.txt"	
+
+#define ClientRsa64PublicKeyFile		"server_folder/client_rsa64_public_key.txt"
+#define ClientRsa512PublicKeyFile	"server_folder/client_rsa512_public_key.txt"
+
+#define ServerRsa512PrivateKeyFile	"server_folder/server_rsa512_private_key.txt"
+#define ServerRsa64PrivateKeyFile	"server_folder/server_rsa64_private_key.txt"
+
+//#define ServerRsa512PublicKeyFile	"server_folder/server_rsa512_public_key.txt"	
+#define ServerCipherSpecFile			"server_folder/server_cipher_suits.txt"
 
 
 typedef enum serverState {
@@ -21,7 +27,9 @@ typedef enum serverState {
 int inputChannel , outputChannel;
 EncType encType;
 serverState state;
-rsaKey serverRsa, clientRsa;
+cipher_spec cipherSpec;
+cipher_struct cipherStruct;
+rsaKey server512Rsa, server64Rsa , client512Rsa , client64Rsa;
 
 int openFifo(const char * pathname);
 
