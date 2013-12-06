@@ -1,9 +1,8 @@
 #include "client.h"
 
-int encrypt_and_send(byte * msg , const int length){
+int encrypt_and_send(byte * msg ,  int length){
 		
-	if(encType == PLAIN)	//send plain text
-	{
+	if(encType == PLAIN){
 		if(writeInPipe(outputChannel, (byte *) msg , length) < 0)
 		{
 			fprintf(stderr , " **** Communication phase write error **** \n\n");
@@ -31,7 +30,7 @@ int encrypt_and_send(byte * msg , const int length){
 			fprintf(stderr , " **** Communication phase write error **** \n\n");
 			return -1;	
 		}			
-		printf("%s\n", BN_bn2hex(message));
+		printf("RSA 512 : %s\n", BN_bn2hex(message));
 		BN_free(message);		
 		return 0;
 	}
@@ -56,7 +55,7 @@ int encrypt_and_send(byte * msg , const int length){
 			return -1;	
 		}
 		
-		printf("%s\n", BN_bn2hex(message));
+		printf("RSA64 : %s\n", BN_bn2hex(message));
 		BN_free(message);		
 		return 0;
 	}
@@ -64,36 +63,59 @@ int encrypt_and_send(byte * msg , const int length){
 	if(encType == Cipher_Bunny24){
 		BIGNUM *tm = BN_new();	
 
-		int message_bit_length = length * 8;	//bit		
-		int ciphertext_bit_length = getCipherLength(message_bit_length);	//bit		
-		int ciphertext_byte_length = ciphertext_bit_length / 8; //byte
+		if(msg[length -1] != '\0')
+		{
+			length ++;
+			msg[length - 1] = '\0';
+		}
 
-		bit  plain_bit_text[message_bit_length];			//plaintext in  bits
-		bit  crypt_bit_text[ciphertext_bit_length];		//ciphertext in bits
-		byte crypt_byte_text[ciphertext_byte_length];	//ciphertext in bytes
+		int message_bit_length = length * 8;				//bits of the msg
+		int ciphertext_bit_length = getCipherLength(message_bit_length);
 		
+		int ciphertext_byte_length = ciphertext_bit_length / 8;
+		
+		bit  plain_bit_text[message_bit_length];				//plaintext in  bits
+		bit  crypt_bit_text[ciphertext_bit_length];			//ciphertext in bits		
+		byte crypt_byte_text[ciphertext_byte_length];		//ciphertext in bytes
+	
+		memset(crypt_byte_text , 0 , ciphertext_byte_length * sizeof(byte));	//init
+		
+		byte hash[HASH_BYTE_LENGTH];
+		memset(hash , 0 , sizeof(byte) * HASH_BYTE_LENGTH);
+		if(cipherSpec.hash_function == hash_spongeBunny)
+			spongeBunnyComputeHash(msg , hash , length);	//compute the hash of the plaintext
+			
 		int i;
-		memset(crypt_byte_text , 0 , ciphertext_byte_length * sizeof(byte));
-		memset(crypt_bit_text , 0 ,  ciphertext_bit_length * sizeof(bit));
 		
 		for(i = 0; i < message_bit_length; i++)
 			plain_bit_text[i] = (msg[i / 8] & (1 << i % 8)) ? 1 : 0;		//to bit
 
-		bunny24CBC_encrypt(plain_bit_text, crypt_bit_text , init_vector , cipherStruct.key , message_bit_length);	//encrypt bunny cbc
-
+		bunny24CBC_encrypt(plain_bit_text, crypt_bit_text , init_vector , cipherStruct.key , message_bit_length); // encrypt
+				
 		for(i = 0; i < ciphertext_bit_length; i++)
-			crypt_byte_text[i/8] |= (crypt_bit_text[i] << (i % 8));		//to byte
+			crypt_byte_text[i/8] |= (crypt_bit_text[i] << (i % 8));		//to byte*/
+		
+		int send_length = ciphertext_byte_length;
 
-		if(writeInPipe(outputChannel, (byte *) crypt_byte_text , ciphertext_byte_length) < 0)
+		byte fullMsg[ciphertext_byte_length + HASH_BYTE_LENGTH];	//message + hash_function
+		memcpy(fullMsg , crypt_byte_text , sizeof(byte) * ciphertext_byte_length);
+		
+		
+		if(cipherSpec.hash_function == hash_spongeBunny)
+		{
+			memmove(fullMsg + (sizeof(byte) * ciphertext_byte_length) , hash , sizeof(byte) * HASH_BYTE_LENGTH);	//append the hash	
+			send_length += HASH_BYTE_LENGTH; 	//inc msg length
+		}
+
+		if(writeInPipe(outputChannel, (byte *) fullMsg , send_length) < 0)
 		{
 			fprintf(stderr , " **** Communication phase write error **** \n\n");
 			return -1;	
 		}
-		
-		tm = BN_bin2bn((const unsigned char *) crypt_byte_text, ciphertext_byte_length , NULL);
-		printf("%s\n", BN_bn2hex(tm));
-		BN_free(tm);	
-		
+
+		tm = BN_bin2bn((const unsigned char *) fullMsg, send_length , NULL);
+		printf("BUNNY24 : %s\n", BN_bn2hex(tm));
+		BN_free(tm);			
 		return 0;
 	}
 	
@@ -102,46 +124,54 @@ int encrypt_and_send(byte * msg , const int length){
 
 		byte ciphertext[length];
 		
-		ALL5_encrypt(&cipherStruct.all5, msg, ciphertext, length);
+		byte hash[HASH_BYTE_LENGTH];
+		
+		if(cipherSpec.hash_function == hash_spongeBunny)
+			spongeBunnyComputeHash(msg , hash , length);	//compute the hash of the plaintext
+				
+		ALL5_encrypt(&cipherStruct.all5, msg, ciphertext, length);	//encrypt the plaintext
 		
 		int send_length = length;
-		byte fullMsg[length + HASH_BYTE_LENGTH];	//message + hash
+		byte fullMsg[length + HASH_BYTE_LENGTH];	//message + hash_function
 		memcpy(fullMsg , ciphertext , sizeof(byte) * length);
 		
 		if(cipherSpec.hash_function == hash_spongeBunny)
-		{		
-		send_length += HASH_BYTE_LENGTH;
-		computeAndAddHash(ciphertext, fullMsg, length);
+		{
+			memmove(fullMsg + (sizeof(byte) * length) , hash , sizeof(byte) * HASH_BYTE_LENGTH);	//append the hash	
+			send_length += HASH_BYTE_LENGTH; 	//inc msg length
 		}
-		
-		if(writeInPipe(outputChannel, (byte *) ciphertext , send_length) < 0)
+
+		if(writeInPipe(outputChannel, (byte *) fullMsg , send_length) < 0)
 		{
 			fprintf(stderr , " **** Communication phase write error **** \n\n");
 			return -1;	
 		}
 		
-		tm = BN_bin2bn((const unsigned char *) ciphertext, length , NULL);
-		printf("ALL5 cipher : %s\n", BN_bn2hex(tm));
+		tm = BN_bin2bn((const unsigned char *) fullMsg, length , NULL);
+		printf("ALL5 : %s\n", BN_bn2hex(tm));
 		BN_free(tm);	
 		
 	}
 	
-	if(encType == Cipher_MAJ5)
-	{
+	if(encType == Cipher_MAJ5){
 		BIGNUM *tm = BN_new();	
 
 		byte ciphertext[length];
+		byte hash[HASH_BYTE_LENGTH];
 		
+		if(cipherSpec.hash_function == hash_spongeBunny)
+			spongeBunnyComputeHash(msg , hash , length);	//compute the hash of the plaintext
+			
 		MAJ5_encrypt(&cipherStruct.maj5, msg, ciphertext, length);
 		
 		int send_length = length;
-		byte fullMsg[length + HASH_BYTE_LENGTH];	//message + hash
+		byte fullMsg[length + HASH_BYTE_LENGTH];	//message + hash_function
 		memcpy(fullMsg , ciphertext , sizeof(byte) * length);
 		
 		if(cipherSpec.hash_function == hash_spongeBunny)
-		{		
-		send_length += HASH_BYTE_LENGTH;
-		computeAndAddHash(ciphertext, fullMsg, length);
+		{
+			memmove(fullMsg + (sizeof(byte) * length) , hash , sizeof(byte) * HASH_BYTE_LENGTH);	//append the hash	
+			send_length += HASH_BYTE_LENGTH; 	//inc msg length
 		}
 		
 		if(writeInPipe(outputChannel, (byte *) fullMsg , send_length) < 0)
@@ -151,7 +181,7 @@ int encrypt_and_send(byte * msg , const int length){
 		}
 		
 		tm = BN_bin2bn((const unsigned char *) fullMsg, send_length , NULL);
-		printf("MAJ5 cipher : %s\n", BN_bn2hex(tm));
+		printf("MAJ5 : %s\n", BN_bn2hex(tm));
 		BN_free(tm);			
 	}
 	
@@ -198,90 +228,6 @@ int receive_and_decrypt(byte * msg){
 		return length;		
 	}
 	
-	if(encType == Cipher_ALL5){
-		BIGNUM *tm = BN_new();	
-		tm = BN_bin2bn((const unsigned char *) msg, length , NULL);
-		printf("%s\n", BN_bn2hex(tm));
-		
-		byte plaintext[length - HASH_BYTE_LENGTH];
-		byte fullMsg[length - HASH_BYTE_LENGTH];
-		
-		if(cipherSpec.hash_function == hash_spongeBunny)
-		{
-			length = computeAndCheckHash(msg , fullMsg , length);	
-			
-			if(length == -1)
-				fprintf(stderr , "Wrong HASH !!!!!!! \n");
-		}
-
-		ALL5_decrypt(&cipherStruct.all5, plaintext, fullMsg, length);
-		BN_free(tm);	
-		
-		memcpy(msg , plaintext , sizeof(byte) * length);		
-		return length;		
-	}
-	
-	if(encType == Cipher_MAJ5){
-		BIGNUM *tm = BN_new();	
-		tm = BN_bin2bn((const unsigned char *) msg, length , NULL);
-		printf("%s\n", BN_bn2hex(tm));
-	
-		byte plaintext[length - HASH_BYTE_LENGTH];
-		byte fullMsg[length - HASH_BYTE_LENGTH];
-		
-		if(cipherSpec.hash_function == hash_spongeBunny)
-		{
-			length = computeAndCheckHash(msg , fullMsg , length);	
-			
-			if(length == -1)
-				fprintf(stderr , "Wrong HASH !!!!!!! \n");
-		}
-		
-		MAJ5_decrypt(&cipherStruct.maj5, plaintext, fullMsg, length);
-		BN_free(tm);		
-		
-		memcpy(msg , plaintext , sizeof(byte) * length);		
-		return length;		
-	}
-	
-	/*
-	if(encType == Cipher_Bunny24)
-	{
-		BIGNUM *tm = BN_new();	
-
-		int message_bit_length = length * 8;	//bit		
-		int ciphertext_bit_length = getCipherLength(message_bit_length);	//bit		
-		int ciphertext_byte_length = ciphertext_bit_length / 8; //byte
-
-		/*bit  plain_bit_text[message_bit_length];			//plaintext in  bits
-		bit  crypt_bit_text[ciphertext_bit_length];		//ciphertext in bits
-		byte crypt_byte_text[ciphertext_byte_length];	//ciphertext in bytes
-		
-		int i;
-		memset(crypt_byte_text , 0 , ciphertext_byte_length * sizeof(byte));
-		memset(crypt_bit_text , 0 ,  ciphertext_bit_length * sizeof(bit));
-		
-		for(i = 0; i < message_bit_length; i++)
-			plain_bit_text[i] = (msg[i / 8] & (1 << i % 8)) ? 1 : 0;		//to bit
-
-		bunny24CBC_decrypt(plain_bit_text, crypt_bit_text , init_vector , cipherStruct.key , message_bit_length);	//encrypt bunny cbc
-
-		for(i = 0; i < ciphertext_bit_length; i++)
-			crypt_byte_text[i/8] |= (crypt_bit_text[i] << (i % 8));		//to byte
-
-		if(writeInPipe(outputChannel, (byte *) crypt_byte_text , ciphertext_byte_length) < 0)
-		{
-			fprintf(stderr , " **** Communication phase write error **** \n\n");
-			return -1;	
-		}
-		*/
-		/*tm = BN_bin2bn((const unsigned char *) msg, length , NULL);
-		printf("%s\n", BN_bn2hex(tm));
-		BN_free(tm);	
-		
-		return 0;
-	}*/
-
 }
 
 int loadRsaKey(){

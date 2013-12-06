@@ -112,49 +112,132 @@ int receive_and_decrypt(byte * msg){
 	if(encType == Cipher_ALL5){
 		BIGNUM *tm = BN_new();	
 		tm = BN_bin2bn((const unsigned char *) msg, length , NULL);
-		printf("%s\n", BN_bn2hex(tm));
-	
-		byte plaintext[length - HASH_BYTE_LENGTH];
-		byte fullMsg[length - HASH_BYTE_LENGTH];
+		printf("ALL5 : %s\n", BN_bn2hex(tm));
+
+		byte message[length - HASH_BYTE_LENGTH];	
+		byte hash[HASH_BYTE_LENGTH];
+
+		int recv_length = length;
 		
 		if(cipherSpec.hash_function == hash_spongeBunny)
 		{
-			length = computeAndCheckHash(msg , fullMsg , length);	
-			
-			if(length == -1)
-				fprintf(stderr , "Wrong HASH !!!!!!! \n");
-		}
-
-		ALL5_decrypt(&cipherStruct.all5, plaintext, fullMsg, length);
-		BN_free(tm);	
+		recv_length -= HASH_BYTE_LENGTH;	
+		memmove(hash , msg + (sizeof(byte) * recv_length) , sizeof(byte) * HASH_BYTE_LENGTH);	//copy the hash
+		memcpy(message , msg , sizeof(byte) * recv_length);	//copy the cihpertext				
 		
-		memcpy(msg , plaintext , sizeof(byte) * length);		
-		return length;		
+		ALL5_decrypt(&cipherStruct.all5, message, message, recv_length);	//decrypt
+		
+		byte rec_hash[HASH_BYTE_LENGTH];
+		spongeBunnyComputeHash(message , rec_hash , recv_length);	//compute the hash of the plaintext
+		
+		if(memcmp(rec_hash, hash, sizeof(byte) * HASH_BYTE_LENGTH) != 0)
+		{
+			recv_length = 0;
+			fprintf(stderr , "Wrong HASH !!!!!!! \n");
+		}
+		
+		tm = BN_bin2bn((const unsigned char *) hash, HASH_BYTE_LENGTH , NULL);
+		printf("HASH : %s\n", BN_bn2hex(tm));
+		memcpy(msg , message , sizeof(byte) * recv_length);
+		
+			
+		}	//no hash function
+		else
+			ALL5_decrypt(&cipherStruct.all5, msg, msg, recv_length);	//decrypt	
+		
+		BN_free(tm);		
+		return recv_length;
 	}
 	
 	if(encType == Cipher_MAJ5){
 		BIGNUM *tm = BN_new();	
 		tm = BN_bin2bn((const unsigned char *) msg, length , NULL);
-		printf("%s\n", BN_bn2hex(tm));
-	
-		byte plaintext[length - HASH_BYTE_LENGTH];
-		byte fullMsg[length - HASH_BYTE_LENGTH];
+		printf("MAJ5 : %s\n", BN_bn2hex(tm));
 		
-		if(cipherSpec.hash_function == hash_spongeBunny)
+		int recv_length = length;
+		
+		if(cipherSpec.hash_function == hash_spongeBunny)		
 		{
-			length = computeAndCheckHash(msg , fullMsg , length);	
-			
-			if(length == -1)
-				fprintf(stderr , "Wrong HASH !!!!!!! \n");
+		byte message[length - HASH_BYTE_LENGTH];	
+		byte hash[HASH_BYTE_LENGTH];
+		
+		recv_length -= HASH_BYTE_LENGTH;	
+		memmove(hash , msg + (sizeof(byte) * recv_length) , sizeof(byte) * HASH_BYTE_LENGTH);	//copy the hash
+		memcpy(message , msg , sizeof(byte) * recv_length);	//copy the cihpertext				
+		
+		MAJ5_decrypt(&cipherStruct.maj5, message, message, recv_length);	//decrypt
+		
+		byte rec_hash[HASH_BYTE_LENGTH];
+		spongeBunnyComputeHash(message , rec_hash , recv_length);	//compute the hash of the plaintext
+		
+		if(memcmp(rec_hash, hash, sizeof(byte) * HASH_BYTE_LENGTH) != 0)
+		{
+			recv_length = 0;
+			fprintf(stderr , "Wrong HASH !!!!!!! \n");
 		}
 		
-		MAJ5_decrypt(&cipherStruct.maj5, plaintext, fullMsg, length);
+		tm = BN_bin2bn((const unsigned char *) hash, HASH_BYTE_LENGTH , NULL);
+		printf("HASH : %s\n", BN_bn2hex(tm));
+		memcpy(msg , message , sizeof(byte) * recv_length);
+		
+		}	//no hash function
+		else
+			MAJ5_decrypt(&cipherStruct.maj5, msg, msg, recv_length);	//decrypt	
+		
+		BN_free(tm);		
+		return recv_length;
+		
+	}
+	
+	if(encType == Cipher_Bunny24){
+		
+		BIGNUM *tm = BN_new();	
+		tm = BN_bin2bn((const unsigned char *) msg, length , NULL);
+		printf("BUNNY24 : %s \n", BN_bn2hex(tm));
+		
+		int recv_length = length - HASH_BYTE_LENGTH;
+		
+		byte hash[HASH_BYTE_LENGTH];	
+		byte mess[recv_length];
+		
+		memmove(hash , msg + (sizeof(byte) * recv_length) , sizeof(byte) * HASH_BYTE_LENGTH);	//copy the hash					
+		memcpy(mess , msg , sizeof(byte) * recv_length);
+		
+		int message_bit_length = recv_length * 8;
+		
+		bit  plain_bit_text[message_bit_length];			//plaintext in  bits
+		bit  crypt_bit_text[message_bit_length];			//ciphertext in bits
+		bit  plain_byte_text[recv_length];
+		
+		memset(plain_byte_text , 0 , sizeof(byte) * recv_length);
+
+		int i;
+
+		for(i = 0; i < message_bit_length; i++)
+			crypt_bit_text[i] = (msg[i / 8] & (1 << i % 8)) ? 1 : 0;		//to bit
+			
+		bunny24CBC_decrypt(plain_bit_text, crypt_bit_text , init_vector , cipherStruct.key , message_bit_length); // encrypt
+
+		for(i = 0; i < message_bit_length; i++)
+			plain_byte_text[i/8] |= (plain_bit_text[i] << (i % 8));		//to byte
+			
+		strcpy(msg ,plain_byte_text);
+		msg[strlen(msg) + 1] = '\0';
+
+		byte rec_hash[HASH_BYTE_LENGTH];
+		memset(rec_hash , 0 , sizeof(byte) * HASH_BYTE_LENGTH);
+		spongeBunnyComputeHash(msg , rec_hash , strlen(msg) + 1);	//compute the hash of the ciphertext
+		
+		if(memcmp(rec_hash, hash, sizeof(byte) * HASH_BYTE_LENGTH) != 0)
+			fprintf(stderr , "Wrong HASH !!!!!!! \n");	
+		
+		tm = BN_bin2bn((const unsigned char *) rec_hash , HASH_BYTE_LENGTH , NULL);
+		printf("\nHASH : %s\n", BN_bn2hex(tm));
+
 		BN_free(tm);	
 		
-		memcpy(msg , plaintext , sizeof(byte) * length);		
-		return length;		
+		return strlen(msg) + 1;
 	}
-
 	
 }
 
@@ -397,16 +480,13 @@ serverState keyExchange(){
 	
 	encType = cipherSpec.public_cipher;
 
-	//TODO normalizzare come vuole il prof
-	//TODO bunny24 --> redo all the function in the opposite order????, not really needed
-	
 	if(cipherSpec.symmetric_cipher == Cipher_Bunny24)
 	{
 		FPRNG(buffer24 , 24);
 		for(i = 0; i < 24; i++)
 			key24[i/8] |= (buffer24[i] << (i % 8));		//to byte
 			
-		tm = BN_bin2bn((const unsigned char *) key64, 8 , NULL);	
+		tm = BN_bin2bn((const unsigned char *) key24, 3 , NULL);	
 		printf("PLAIN : %s\n", BN_bn2hex(tm));	
 		encrypt_and_send(key24 , 3);
 		cipherInit(&cipherStruct , buffer24 , 24 , init_vector , 24, Cipher_Bunny24);

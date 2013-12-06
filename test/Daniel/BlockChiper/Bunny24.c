@@ -3,8 +3,8 @@
 
 void bunny24_encrypt(bit block[block_length] , bit key[key_length]){
 	
-	blockInversion(block);
-	blockInversion(key);
+	//blockInversion(block);
+	//blockInversion(key);
 
 	bit keys[16][key_length];
 	
@@ -17,15 +17,15 @@ void bunny24_encrypt(bit block[block_length] , bit key[key_length]){
 	for(i = 1; i <= 15; i++)					// 15 rounds
 		round(block , keys[i]);
 	
-	blockInversion(block);
-	blockInversion(key);
+	//blockInversion(block);
+	//blockInversion(key);
 	
 }
 
 void bunny24_decrypt(bit block[block_length] , bit key[key_length]){
 	
-	blockInversion(block);
-	blockInversion(key);
+	//blockInversion(block);
+	//blockInversion(key);
 
 	bit keys[16][key_length];
 	
@@ -38,8 +38,8 @@ void bunny24_decrypt(bit block[block_length] , bit key[key_length]){
 	
 	arraySum(block , keys[0] , block , block_length); // first XOR
 	
-	blockInversion(block);
-	blockInversion(key);
+	//blockInversion(block);
+	//blockInversion(key);
 	
 }
 

@@ -33,6 +33,8 @@
 
 static bit init_vector[24] = {0 , 1 , 0 , 1 , 0 , 1 , 0 , 1, 0 , 1 , 0 , 1 , 0 , 1 , 0 , 1 , 0 , 1 , 0 , 1, 0 , 1 , 0 , 1};
 
+static int length_of_bunny_message = 0;
+
 typedef struct RSAKEY {
 	BIGNUM *exponent;
 	BIGNUM *modulo;
@@ -76,13 +78,6 @@ void cipherInit(cipher_struct * cipher , const bit * key ,
 					 const EncType encType);
 
 void cipherDelete(cipher_struct * cipher ,const EncType encType);
-
-int computeAndAddHash(byte * msg , byte * fullMsg , int length); //msg --> original , fullMsg --> msg + hash, length = length of msg
-//return length + hash_length
-
-int computeAndCheckHash(byte * msg , byte * fullMsg , int length);//msg --> original , fullMsg --> msg - hash, length = length of msg
-//return length - hash_length , -1 if wrong
-
 
 
 #endif
