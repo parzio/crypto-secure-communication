@@ -388,7 +388,7 @@ clientState authentication(){
 	receive_and_decrypt(msg512);
 	
 	message = BN_bin2bn((const unsigned char *) msg512, RSA512_BYTE_LENGTH , NULL);
-	printf("%s\n", BN_bn2hex(original));
+	printf("%s\n", BN_bn2hex(message));
 	
 	fprintf(stderr , "\n< Client plain challenge, server authentication > \n");			
 	printf("%s\n", BN_bn2hex(original));

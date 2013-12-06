@@ -49,7 +49,6 @@ void SPRNG(bit * result , int length){
 	bit fseed[cicle * 2];	//seed for the SPNRG --> i take 48 bits form this array to generate 24 bits with bunny24
 	bit resul[cicle];
 
-	initFPRNG();
 	FPRNG(fseed , cicle * 2);	//generate the Seed
 
 	int i , end = cicle/24 , p = 0;
@@ -101,8 +100,7 @@ void primeGenerator(bit * number , int length){
 	BIGNUM *n;
 	
 	n = BN_new();
-	initFPRNG();
-	
+
 	int exit = 0 , i = 0;
 	int byteLength = length / 8 + ((length % 8 != 0) ? 1 : 0); //length in byte
 	byte res[byteLength];	
