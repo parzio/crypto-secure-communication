@@ -2,19 +2,55 @@
 #include "StreamChiper/streamChiper.h"
 #include "BlockChiper/cbcMode.h"
 #include "PRNG/PRNG.h"
+#include "Utility/arrays.h"
 
 
 int main(int argc, char ** argv){
 	
-	int rsaKeyLength = atoi(argv[1]);
+	/*bitArray *a1 , *a2 , *r;
+	
+	a1 = newEmptyBitArray();
+	a2 = newBitArray(25);
+	r  = newEmptyBitArray();
+	
+	resizeBitArray(a1 , 30);
+	
+	byte ciao[6] = {118 , 123 , 244 , 60 , 12 , 5};
+	
+	byte2BitArray(r , ciao , 6);
+
+	initFPRNG();
+	FPRNG(a1->array , a1->length);
+	FPRNG(a2->array , a2->length);
+	
+	printBinaryBitArray(a1);
+	shiftBitArray(a1 , -5);
+	printBinaryBitArray(a1);*/
+	
+	
+	/*sumBitArray(a1 , a1 , a2);
+	
+	printBinaryBitArray(a2);
+	printBinaryBitArray(r);
+	*/
+	/*char bb[] = {"0123456789ABCDEF"};
+
+	hex2BitArray(r , bb);
+	printBinaryBitArray(r);
+	printHexBitArray(r);
+*/
+/*	deleteBitArray(a1);
+	deleteBitArray(a2);
+	deleteBitArray(r);
+	
+	*/
+	/*int rsaKeyLength = atoi(argv[1]);
 	int rsaByteKeyLength = rsaKeyLength / 8;
 	int primeBitLength 	= rsaKeyLength / 2;
 	int primeByteLength	= primeBitLength / 8;
 	
 	int i;
-	
-	printf("rsa length : %d \n" , rsaKeyLength);
-	
+
 	bit	P[primeBitLength] , Q[primeBitLength];
 	
 	initFPRNG();
@@ -28,8 +64,8 @@ int main(int argc, char ** argv){
 	
 	for(i = 0; i < primeBitLength; i++)
 	{
-		Pbyte[i/8] |= (P[i] << (i % 8));		//to byte*/
-		Qbyte[i/8] |= (Q[i] << (i % 8));		//to byte*/ 
+		Pbyte[i/8] |= (P[i] << (i % 8));		//to byte
+		Qbyte[i/8] |= (Q[i] << (i % 8));		//to byte 
 	}
 	
 	BIGNUM *bN , *bQ , *bP, *pi , *bE , *bD , *gcd;
@@ -64,9 +100,9 @@ int main(int argc, char ** argv){
 		FPRNG(bitE, rsaKeyLength - 8);	//generate E
 									
 		for(i = 0; i < rsaKeyLength - 8; i++)
-			byteE[i/8] |= (bitE[i] << (i % 8));		//to byte*/
+			byteE[i/8] |= (bitE[i] << (i % 8));		//to byte
 		
-		bE = BN_bin2bn((const unsigned char *) byteE, rsaByteKeyLength -1 , NULL);
+		bE = BN_bin2bn((const unsigned char *) byteE, rsaByteKeyLength - 1 , NULL);
 
 		BN_gcd(gcd , bE, pi, t);			//gcd	
 		
@@ -74,25 +110,23 @@ int main(int argc, char ** argv){
 	
 	BN_mod_inverse(bD, bE, pi, t);
 
-	byte mess[8] = { 1 , 2 , 3 , 4 , 5 , 6 , 7};
+	byte mess[8] = { 255 , 255 , 255 , 255 , 255 , 255 , 255};
 	
 	BIGNUM *msg = BN_new();
 	
-	printf("module  : %s\n", BN_bn2hex(bN));
-	printf("pi : %s\n", BN_bn2hex(pi));	
-	printf("bE <= pi: %d\n", BN_ucmp(bE, pi));
-	printf("public  : %s\n", BN_bn2hex(bE));	
-	printf("private : %s\n", BN_bn2hex(bD));
+	printf("module  : %s\n modulo  length %d\n", BN_bn2hex(bN), strlen(BN_bn2hex(bN))*4);
+	printf("public  : %s\n public  length %d\n", BN_bn2hex(bE), strlen(BN_bn2hex(bE))*4);	
+	printf("private : %s\n private length %d\n", BN_bn2hex(bD), strlen(BN_bn2hex(bD))*4);
 	
-	msg = BN_bin2bn((const unsigned char *) mess, 8 , NULL);
+	msg = BN_bin2bn((const unsigned char *) mess, 8 - 1 , NULL);
 	
 	printf("plain : %s\n", BN_bn2hex(msg));	
 	
-	BN_mod_exp(msg , msg, bE , bN , t);
+	BN_mod_exp(msg , msg, bD , bN , t);
 	
 	printf("plain : %s\n", BN_bn2hex(msg));
 	
-	BN_mod_exp(msg , msg, bD , bN , t);
+	BN_mod_exp(msg , msg, bE , bN , t);
 	
 	printf("plain : %s\n", BN_bn2hex(msg));
 	
@@ -105,7 +139,7 @@ int main(int argc, char ** argv){
 	BN_free(bD);
 	BN_free(gcd);
 	
-	
+	*/
 	return 0;
 	
 }

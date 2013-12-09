@@ -368,11 +368,11 @@ clientState authentication(){
 	memset(msg512 , 0 , RSA512_BYTE_LENGTH * sizeof(byte));
 	
 	initFPRNG();
-	FPRNG(buffer, RSA512_BIT_LENGTH); // generates random bits.
+	FPRNG(buffer, RSA512_BIT_LENGTH / 2); // generates random bits.
 	
 	int i;
 	
-	for(i = 0; i < RSA512_BIT_LENGTH; i++)
+	for(i = 0; i < RSA512_BIT_LENGTH / 2; i++)
 		msg512[i/8] |= (buffer[i] << (i % 8));		//to byte
 
 	original = BN_bin2bn((const unsigned char *) msg512, RSA512_BYTE_LENGTH , NULL);
@@ -388,10 +388,10 @@ clientState authentication(){
 	receive_and_decrypt(msg512);
 	
 	message = BN_bin2bn((const unsigned char *) msg512, RSA512_BYTE_LENGTH , NULL);
-	printf("%s\n", BN_bn2hex(message));
+	printf("PLAIN : %s\n", BN_bn2hex(message));
 	
 	fprintf(stderr , "\n< Client plain challenge, server authentication > \n");			
-	printf("%s\n", BN_bn2hex(original));
+	printf("PLAIN : %s\n", BN_bn2hex(original));
 	
 	if(BN_cmp(original , message) != 0)
 	{
@@ -410,7 +410,7 @@ clientState authentication(){
 	
 	fprintf(stderr , "\n< Client name, client authentication >\n");
 	encrypt_and_send(clientName , strlen(clientName));
-	fprintf(stderr, "%s\n" , clientName);
+	fprintf(stderr, "PLAIN : %s\n" , clientName);
 	
 	encType = RSA64;
 
@@ -424,7 +424,7 @@ clientState authentication(){
 	
 	fprintf(stderr , "\n< Client response , client authentication > \n");			
 	encrypt_and_send(msg64 , RSA64_BYTE_LENGTH);
-	printf("%s\n", BN_bn2hex(message));
+	printf("PLAIN : %s\n", BN_bn2hex(message));
 		
 	BN_free(message);
 		

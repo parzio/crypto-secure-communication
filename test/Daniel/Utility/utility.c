@@ -236,3 +236,8 @@ int arrayEqual(bit *a1 , bit *a2 , unsigned int length){
 		
 }
 
+
+
+
+
+
