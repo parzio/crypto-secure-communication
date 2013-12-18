@@ -53,6 +53,8 @@ int cmpBitArray(const bitArray *a , const bitArray *b);
 
 void sumBitArray(bitArray *r , const bitArray * a , const bitArray * b);
 
+void mulBitArray(bitArray *r , const bitArray * a , const bitArray * b);
+
 void mul_mod_BitArray(bitArray *r , const bitArray * a , const bitArray * b , const bitArray * n);
 
 void shiftBitArray( bitArray * a , const int shift);	// shift > 0 --> right shift , else left

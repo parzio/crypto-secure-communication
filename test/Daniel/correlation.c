@@ -1,45 +1,30 @@
 #include "StreamChiper/toy.h"
 #include "PRNG/PRNG.h"
-
-int computeStream(bit state1[2] , bit state2[3] , bit state3[4] , bit state4[7] , bit state5[8], bit * stream , int stream_length)
-{
-	TOY toy;
-	
-	TOY_init(&toy);
-
-	LFSR * reg1 , *reg2 , *reg3 , *reg4 , *reg5;
-	
-	reg1 = &toy.reg[0];
-	reg2 = &toy.reg[1];
-	reg3 = &toy.reg[2];
-	reg4 = &toy.reg[3];
-	reg5 = &toy.reg[4];
-	
-	memcpy(reg1->reg , state1 , sizeof(bit) * 2);
-	memcpy(reg2->reg , state2 , sizeof(bit) * 3);
-	memcpy(reg3->reg , state3 , sizeof(bit) * 4);
-	memcpy(reg4->reg , state4 , sizeof(bit) * 7);
-	memcpy(reg5->reg , state5 , sizeof(bit) * 8);
-
-	TOY_getStream(&toy , stream , stream_length);
-	TOY_delete(&toy);	
-
-	return 1;
-}
-
-
 int main(int argc, char ** argv){
+
+	if(argc < 2)
+	{
+		printf("\n\nError!!! usage : ./correlation [known bit num]\n\n");
+		return 0;
+	}
+	
+	/*
+	 *	int stream_length = 256;
+	 *	bit plain_stream[stream_length];
+	 * hexToBianry(plain_stream , hex);	//hex to binary
+	 * int c_length = 10000;
+	 * bit ciphertext[c_length];
+	 * hexToBianry(ciphertext, hex);
+	 */
 	
 	
-	int stream_length = atoi(argv[1]);	
+	int stream_length = atoi(argv[1]);
 	bit plain_stream[stream_length];
 	
 	TOY toy;
 	TOY_init(&toy);
 	TOY_print_intial_state(&toy);
 	TOY_getStream(&toy , plain_stream , stream_length);
-
-		
 
 	bit reg_5_test_state[8];
 	bit reg_5_test_stream[stream_length];
@@ -85,7 +70,7 @@ int main(int argc, char ** argv){
 			
 		}while(exit != 1 && j < stream_length);
 		
-		if(j == stream_length && (count_reg5_zero > count_plain_zero/2))	//at last 1/3 of the zero must be in common
+		if(j == stream_length && (count_reg5_zero > count_plain_zero/2))	//at last 1/2 of the zero must be in common
 		{
 			printf("Reg 5 test state  : ");
 			printArray(reg_5_test_state , 8);	
@@ -100,16 +85,19 @@ int main(int argc, char ** argv){
 				LFSR_getStream(&reg_lfsr_4 , reg_4_test_stream , stream_length);	//get stream
 			
 				exit = -1; j = 0;
+				int diff = 0;
 				
 				do{
 					if(plain_stream[j] == 0 && reg_5_test_stream[j] == 1 && reg_4_test_stream[j] != 1)	
 						//if plain[j] == 0 , reg5[j] == 1 , reg4[j] must be 1
 						exit = 1;
 					else
+						if(plain_stream[j] != reg_4_test_stream[j])
+							diff ++;
 						j++;
 				}while(exit != 1 && j < stream_length);
 				
-				if(j == stream_length)	//if end
+				if(j == stream_length && diff >= (stream_length / 2))	//if end
 				{
 					printf("Reg 4 test state  : \t ");
 					printArray(reg_4_test_state , 7);
@@ -204,10 +192,28 @@ int main(int argc, char ** argv){
 	}while(reg_5_state_index < 256 && find == 0);
 	
 	
-/*	
+	
 	TOY found;
 	
 	TOY_init_with_reg(&found , reg_1_test_state , reg_2_test_state , reg_3_test_state , reg_4_test_state , reg_5_test_state);
-	TOY_print_intial_state(&found);*/
-		
+	TOY_print_intial_state(&found);
+	
+	bit newStream[stream_length];
+	TOY_getStream(&found , newStream , stream_length);
+	
+	TOY_getStream(&toy ,   plain_stream , stream_length);
+	TOY_getStream(&found , newStream , stream_length);
+	
+	printf("Toy stream  bit[%d - %d] : " , stream_length , stream_length * 2);
+	printArray(plain_stream , stream_length);
+	printf("My stream   bit[%d - %d] : " , stream_length , stream_length * 2);
+	printArray(newStream , stream_length);
+
+	int num_equal = 0 , i;
+	for(i = 0; i < stream_length; i++)
+		num_equal += (plain_stream[i] == newStream[i]) ? 1 : 0;
+	
+	printf("Number of equal bit %d / %d \n" , num_equal , stream_length);
+	
+	
 }

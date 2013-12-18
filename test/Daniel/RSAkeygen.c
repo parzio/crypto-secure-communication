@@ -6,45 +6,8 @@
 
 
 int main(int argc, char ** argv){
-	
-	/*bitArray *a1 , *a2 , *r;
-	
-	a1 = newEmptyBitArray();
-	a2 = newBitArray(25);
-	r  = newEmptyBitArray();
-	
-	resizeBitArray(a1 , 30);
-	
-	byte ciao[6] = {118 , 123 , 244 , 60 , 12 , 5};
-	
-	byte2BitArray(r , ciao , 6);
 
-	initFPRNG();
-	FPRNG(a1->array , a1->length);
-	FPRNG(a2->array , a2->length);
-	
-	printBinaryBitArray(a1);
-	shiftBitArray(a1 , -5);
-	printBinaryBitArray(a1);*/
-	
-	
-	/*sumBitArray(a1 , a1 , a2);
-	
-	printBinaryBitArray(a2);
-	printBinaryBitArray(r);
-	*/
-	/*char bb[] = {"0123456789ABCDEF"};
-
-	hex2BitArray(r , bb);
-	printBinaryBitArray(r);
-	printHexBitArray(r);
-*/
-/*	deleteBitArray(a1);
-	deleteBitArray(a2);
-	deleteBitArray(r);
-	
-	*/
-	/*int rsaKeyLength = atoi(argv[1]);
+	int rsaKeyLength = atoi(argv[1]);
 	int rsaByteKeyLength = rsaKeyLength / 8;
 	int primeBitLength 	= rsaKeyLength / 2;
 	int primeByteLength	= primeBitLength / 8;
@@ -54,9 +17,27 @@ int main(int argc, char ** argv){
 	bit	P[primeBitLength] , Q[primeBitLength];
 	
 	initFPRNG();
+	int P_ok = 0 , Q_ok = 0;
+	do{
 	primeGenerator(P , primeBitLength);
-	primeGenerator(Q , primeBitLength);
-
+	primeGenerator(Q , primeBitLength);	
+	P_ok = 0;
+	Q_ok = 0;
+	int tt = primeBitLength - 1;
+	int ee = primeBitLength - 8;
+	
+	for(tt ; tt >= ee; tt--)
+	{
+	if(P[tt] != 0)
+		P_ok = 1;
+	if(Q[tt] != 0)
+		Q_ok = 1;
+	}
+	
+	}while(P_ok == 0 || Q_ok == 0 || memcmp(P , Q , primeBitLength) == 0);
+	
+	
+	
 	byte Pbyte[primeByteLength] , Qbyte[primeByteLength];
 	
 	memset(Pbyte , 0 , primeByteLength * sizeof(byte));
@@ -90,7 +71,6 @@ int main(int argc, char ** argv){
 	
 	BN_mul(pi, bP, bQ, t);
 	
-	
 	bit 	bitE[rsaKeyLength];
 	byte 	byteE[rsaByteKeyLength];
 	
@@ -110,7 +90,7 @@ int main(int argc, char ** argv){
 	
 	BN_mod_inverse(bD, bE, pi, t);
 
-	byte mess[8] = { 255 , 255 , 255 , 255 , 255 , 255 , 255};
+	byte mess[8] = { 126 , 234 , 123 , 129 , 12 , 1 , 67};
 	
 	BIGNUM *msg = BN_new();
 	
@@ -120,15 +100,15 @@ int main(int argc, char ** argv){
 	
 	msg = BN_bin2bn((const unsigned char *) mess, 8 - 1 , NULL);
 	
-	printf("plain : %s\n", BN_bn2hex(msg));	
+	printf("plainText : %s\n", BN_bn2hex(msg));	
 	
 	BN_mod_exp(msg , msg, bD , bN , t);
 	
-	printf("plain : %s\n", BN_bn2hex(msg));
+	printf("Encrypted text : %s\n", BN_bn2hex(msg));
 	
 	BN_mod_exp(msg , msg, bE , bN , t);
 	
-	printf("plain : %s\n", BN_bn2hex(msg));
+	printf("Decrypted Text : %s\n", BN_bn2hex(msg));
 	
 	BN_CTX_free(t);
 	BN_free(bN);
@@ -139,7 +119,7 @@ int main(int argc, char ** argv){
 	BN_free(bD);
 	BN_free(gcd);
 	
-	*/
+	
 	return 0;
 	
 }

@@ -17,7 +17,7 @@ void rotate(bit * array, int shift , unsigned int degree);
 void printArray(bit *array, unsigned int x);
 void inverteArray(bit *array, unsigned int length);
 void arrayCopy(bit * a , bit * b , int length);
-
+void corrHexToBinary(bit * array, char * hex);
 void hexToBinary(bit * array, char * hex);
 void printHex(bit * array, unsigned int length);
 void binToHex(bit * array,int length ,char *hex);

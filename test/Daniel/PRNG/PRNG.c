@@ -105,9 +105,11 @@ void primeGenerator(bit * number , int length){
 	int byteLength = length / 8 + ((length % 8 != 0) ? 1 : 0); //length in byte
 	byte res[byteLength];	
 
+	int count = 0;
+	
 	do{		
 		FPRNG(number , length);	//generate a number
-		
+
 		memset(res , 0 , byteLength * sizeof(byte));	//initialize to 0
 		
 		for(i = 0; i < length; i++)

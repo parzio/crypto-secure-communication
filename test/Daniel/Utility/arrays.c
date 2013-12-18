@@ -189,7 +189,7 @@ int getGradeBitArray(const bitArray *a){
 	int i = a->length;	//max grade + 1
 	do{
 		i --;
-	}while(a->array[i] != 1);
+	}while(a->array[i] != 1 && i > 0);
 	
 	return i;
 }
@@ -253,8 +253,53 @@ void shiftBitArray(bitArray * a , const int shift){
 	
 }
 
+void mulBitArray(bitArray *r , const bitArray * a , const bitArray * b){
+	
+	int aG = getGradeBitArray(a);
+	int bG = getGradeBitArray(b);
 
+	int l = aG + bG + 1;	//length of the result
+	
+	bitArray * tmp = newBitArray(l);
+		
+	int i;
+	for(i = 0; i <= aG; i++)	//for each bit of a
+	{
+		if(a->array[i] == 1)
+		{
+			int j , c = i;	//current bit of tmp
+			for(j = 0; j <= bG; j++) //for each bit of b
+				tmp->array[c++] ^= b->array[j];
+		} 		
+	}
+	
+	copyBitArray(r , tmp);	
+	deleteBitArray(tmp);		
+}
+/*
+void mmodBitArray(bitArray *r , const bitArray * a , const bitArray * n){
+	
+	int aG = getGradeBitArray(a);
+	int nG = getGradeBitArray(n);
 
+	int l = nG + 1;	//length of the result
+	
+	bitArray * tmp = newBitArray(l);
+		
+	int i;
+	for(i = 0; i <= aG; i++)	//for each bit of a
+	{
+		if(a->array[i] == 1)
+		{
+			int j , c = i;	//current bit of tmp
+			for(j = 0; j <= bG; j++) //for each bit of b
+				tmp->array[c++] ^= b->array[j];
+		} 		
+	}
+	
+	copyBitArray(r , tmp);	
+	deleteBitArray(tmp);		
+}*/
 
 
 

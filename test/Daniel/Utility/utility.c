@@ -121,6 +121,51 @@ void inverteArray(bit *array, unsigned int length){
 		array[i] = buffer[i];	
 }
 
+void corrHexToBinary(bit * array , char * hex){
+	int i, j , index = strlen(hex) * 4 - 1;
+
+	for(i = strlen(hex) - 1; i >= 0; i--)
+	{
+		u_int8_t num = 0;
+		
+		switch(hex[i]){
+			case '0' : num = 0;  break;
+			case '1' : num = 1;  break;
+			case '2' : num = 2;  break;
+			case '3' : num = 3;  break;	
+			case '4' : num = 4;  break;
+			case '5' : num = 5;  break;	
+			case '6' : num = 6;  break;
+			case '7' : num = 7;  break;	
+			case '8' : num = 8;  break;
+			case '9' : num = 9;  break;
+			case 'A' : num = 10; break;	
+			case 'B' : num = 11; break;
+			case 'C' : num = 12; break;	
+			case 'D' : num = 13; break;
+			case 'E' : num = 14; break;
+			case 'F' : num = 15; break;
+			case 'a' : num = 10; break;	
+			case 'b' : num = 11; break;
+			case 'c' : num = 12; break;	
+			case 'd' : num = 13; break;
+			case 'e' : num = 14; break;
+			case 'f' : num = 15; break;
+			default : printf("error hex for char %c \n\n" , hex[i]); break;
+ 		}
+
+		for(j = 0; j < 4; j++)
+		{
+			if(num & (1 << j))
+				array[index] = 1;
+			else
+				array[index] = 0;
+			index--;
+		}
+	}	
+
+}
+
 void hexToBinary(bit * array, char * hex){
 
 	/*
