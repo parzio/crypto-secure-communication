@@ -6,3 +6,4 @@ Simulation of an encrypted communication over an unsecure channel.
 I have decided to move the configurations to etc folder just for the sake of best practices.
 
 TODO: For running the virtual system it's necessary linking the source code within the new configuration location
+sdfsdfdsfdsfsd
